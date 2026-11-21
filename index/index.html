@@ -520,6 +520,13 @@
     /* AI Service Model Selector & Live Sync (Local API + GitHub Pages Static Fallback) */
     let isStaticHosting = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
     let staticSitesCache = null;
+function normalizeSitesCache(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  if (Array.isArray(raw.sites)) return raw.sites;
+  if (typeof raw === 'object') return Object.values(raw);
+  return [];
+}
     let staticNoticeShown = false;
 
     function getStoredGeminiKey() {
@@ -870,10 +877,10 @@
         if (!staticSitesCache) {
           try {
             const sRes = await fetch('data/live_cache.json');
-            if (sRes.ok) staticSitesCache = await sRes.json();
+            if (sRes.ok) staticSitesCache = normalizeSitesCache(await sRes.json());
           } catch {}
         }
-        list = (staticSitesCache || []).filter((s) => !q || (s.name || '').toLowerCase().includes(q));
+        list = normalizeSitesCache(staticSitesCache).filter((s) => !q || (s.name || '').toLowerCase().includes(q));
       }
       $('#browse').innerHTML = list.map((s) => {
         const notices = (s.notices || []).slice(0, 3)
@@ -1120,8 +1127,8 @@
           const staticRes = await fetch('data/live_cache.json');
           if (staticRes.ok) {
             const staticData = await staticRes.json();
-            staticSitesCache = staticData;
-            renderLiveSites(staticData || []);
+            staticSitesCache = normalizeSitesCache(staticData);
+            renderLiveSites(staticSitesCache);
           }
         } catch {}
       }
@@ -1140,13 +1147,13 @@
       if (!staticSitesCache) {
         try {
           const sRes = await fetch('data/live_cache.json');
-          if (sRes.ok) staticSitesCache = await sRes.json();
+          if (sRes.ok) staticSitesCache = normalizeSitesCache(await sRes.json());
         } catch {}
       }
 
       const cur = getCurrentProfile();
       const selectedLang = $('#ui-lang').value || 'en-IN';
-      const sampleSites = (staticSitesCache || []).slice(0, 5).map((s) => ({
+      const sampleSites = normalizeSitesCache(staticSitesCache).slice(0, 5).map((s) => ({
         name: s.name,
         url: s.url,
         notices: (s.notices || []).slice(0, 3).map((n) => n.text),
@@ -1231,7 +1238,7 @@ ${JSON.stringify(sampleSites)}`;
               { uri: 'https://pmfby.gov.in', title: 'PMFBY Crop Insurance' },
               { uri: 'https://agricoop.gov.in', title: 'Ministry of Agriculture' },
             ],
-            liveSites: staticSitesCache || [],
+            liveSites: normalizeSitesCache(staticSitesCache),
           };
         } catch (err) {
           lastError = err;

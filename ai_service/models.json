@@ -1,0 +1,56 @@
+{
+  "provider": "google-ai-studio",
+  "syncedAt": null,
+  "active": {
+    "chatModel": "gemini-2.5-flash-lite",
+    "ttsModel": "local-pyttsx3",
+    "liveModel": "gemini-3.8-live"
+  },
+  "availableModels": [
+    {
+      "id": "gemini-4-hydrogen",
+      "displayName": "Gemini 4 Hydrogen",
+      "category": "chat",
+      "freeTier": true,
+      "supportedMethods": [
+        "generateContent"
+      ]
+    },
+    {
+      "id": "gemini-3.5-flash-lite",
+      "displayName": "Gemini 3.5 Flash-Lite",
+      "category": "chat",
+      "freeTier": true,
+      "supportedMethods": [
+        "generateContent"
+      ]
+    },
+    {
+      "id": "gemini-2.5-flash-lite",
+      "displayName": "Gemini 2.5 Flash-Lite",
+      "category": "chat",
+      "freeTier": true,
+      "supportedMethods": [
+        "generateContent"
+      ]
+    },
+    {
+      "id": "local-pyttsx3",
+      "displayName": "Local Python TTS (Offline)",
+      "category": "tts",
+      "freeTier": true,
+      "supportedMethods": [
+        "local"
+      ]
+    },
+    {
+      "id": "gemini-3.8-live",
+      "displayName": "Gemini 3.8 Live",
+      "category": "live",
+      "freeTier": true,
+      "supportedMethods": [
+        "bidiGenerateContent"
+      ]
+    }
+  ]
+}

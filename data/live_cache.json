@@ -1,0 +1,407 @@
+{
+  "pm-kisan": {
+    "id": "pm-kisan",
+    "name": "PM-KISAN",
+    "url": "https://pmkisan.gov.in",
+    "official": true,
+    "status": "error",
+    "error": "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1147)",
+    "fetchedAt": "2026-11-21T07:54:09.035356+00:00",
+    "fetchedAtEpoch": 1795247649.0353768,
+    "title": "",
+    "bodyText": "",
+    "sections": [],
+    "tables": [],
+    "notices": [],
+    "crawledLinks": [],
+    "files": [],
+    "contentHash": null,
+    "changed": false
+  },
+  "soil-health-card": {
+    "id": "soil-health-card",
+    "name": "Soil Health Card",
+    "url": "https://soilhealth.dac.gov.in",
+    "official": true,
+    "status": "ok",
+    "httpStatus": 200,
+    "latencyMs": 233,
+    "fetchedAt": "2026-11-21T07:54:09.048783+00:00",
+    "fetchedAtEpoch": 1795247649.0488183,
+    "title": "Soil Health",
+    "bodyText": "Soil Health",
+    "sections": [],
+    "tables": [],
+    "notices": [],
+    "crawledLinks": [],
+    "files": [],
+    "contentHash": "4f53cda18c2baa0c",
+    "changed": false,
+    "error": null
+  },
+  "krushak-odisha": {
+    "id": "krushak-odisha",
+    "name": "Krushak Odisha",
+    "url": "https://krushak.odisha.gov.in",
+    "official": true,
+    "status": "ok",
+    "httpStatus": 200,
+    "latencyMs": 297,
+    "fetchedAt": "2026-11-21T07:54:09.114146+00:00",
+    "fetchedAtEpoch": 1795247649.1142132,
+    "title": "Krushak Odisha Portal",
+    "bodyText": "Krushak Odisha Portal",
+    "sections": [],
+    "tables": [],
+    "notices": [],
+    "crawledLinks": [],
+    "files": [],
+    "contentHash": "4f53cda18c2baa0c",
+    "changed": false,
+    "error": null
+  },
+  "pmfby": {
+    "id": "pmfby",
+    "name": "PMFBY",
+    "url": "https://pmfby.gov.in",
+    "official": true,
+    "status": "ok",
+    "httpStatus": 200,
+    "latencyMs": 253,
+    "fetchedAt": "2026-11-21T07:54:09.069107+00:00",
+    "fetchedAtEpoch": 1795247649.0691373,
+    "title": "Pradhan Mantri Fasal Bima Yojana - Crop Insurance | PMFBY - Crop Insurance",
+    "bodyText": "Pradhan Mantri Fasal Bima Yojana - Crop Insurance | PMFBY - Crop Insurance",
+    "sections": [],
+    "tables": [],
+    "notices": [],
+    "crawledLinks": [],
+    "files": [],
+    "contentHash": "4f53cda18c2baa0c",
+    "changed": false,
+    "error": null
+  },
+  "myscheme": {
+    "id": "myscheme",
+    "name": "myScheme",
+    "url": "https://www.myscheme.gov.in",
+    "official": true,
+    "status": "ok",
+    "httpStatus": 200,
+    "latencyMs": 368,
+    "fetchedAt": "2026-11-21T07:54:09.366404+00:00",
+    "fetchedAtEpoch": 1795247649.3665514,
+    "title": "myScheme",
+    "bodyText": "myScheme Something went wrong. Please try again later. Ok Are you sure you want to sign out? Cancel Sign Out | | English English Theme Sign In #GOVERNMENTSCHEMES / #SCHEMESFORYOU Find Schemes For You Categories States/UTs Central Ministries Find schemes based on categories How it works Easy steps to apply for Government Schemes Enter Details Start by entering your basic details! Search Our search engine will find the relevant schemes ! Select & Apply Select and apply for the best suited scheme About myScheme is a National Platform that aims to offer one-stop search and discovery of the Government schemes. It provides an innovative, technology-based solution to discover scheme information based upon the eligibility of the citizen. The platform helps the citizen to find the right Government schemes for them. It also guides on how to apply for different Government schemes. Thus no need to visit multiple Government websites. View More Frequently Asked Questions Checkout our knowledge base for some of your answers! What is myScheme, and how is it different from other government portals? myScheme is a national platform for accessing a wide range of government schemes from both the Central & State/UT Governments. It is a one-stop platform for search & discovery of government schemes based on demographic details. Unlike traditional government portals, myScheme brings together schemes from the Central Government, State Governments, and Union Territories on a single platform and helps users find relevant schemes based on their eligibility. How will myScheme help common citizens? The myScheme platform simplifies access to government schemes by enabling citizens to discover relevant schemes in one place, eliminating the need to visit multiple departmental websites or review extensive scheme guidelines to check their eligibility. How does myScheme work? The myScheme platform follows a simple and user-friendly three-step process to help citizens discover government schemes for which they are eligible: Step 1: The user enters basic details such as demographic, income, social category, etc. Step 2: Based on the information provided, myScheme displays relevant schemes from hundreds of government schemes for the user. Step 3: The user can select from the list of eligible schemes and get more information from the dedicated scheme page with detailed knowledge, FAQs, and application process and navigate to the respective application URL to apply. What is the procedure for knowing the right scheme on the myScheme platform? To find the right scheme on the myScheme platform, citizens can begin by visiting the platform's official website. Once on the homepage, they will find the 'Find Schemes for You' feature, which allows users to enter their demographic details, such as age, gender, income level, category, etc. Once these details are submitted, the platform will provide a list of relevant schemes based on the user's profile. What information about a particular scheme can I find on myScheme? The myScheme platform provides comprehensive information on each scheme, including eligibility criteria, benefits offered, application procedure, and the documents required to avail the scheme. It also features a dedicated Frequently Asked Questions (FAQs) section to address common queries related to the scheme. View More © 2026 Powered by Digital India Corporation(DIC) Ministry of Electronics & IT (MeitY) Government of India ® Connect on Social Media Quick Links About Us Contact Us Screen Reader Accessibility Statement Frequently Asked Questions Disclaimer Terms & Conditions Dashboard Useful Links Get in touch 4th Floor, NeGD, Electronics Niketan, 6 CGO Complex, Lodhi Road, New Delhi - 110003, India support-myscheme[at]digitalindia[dot]gov[dot]in (011) 24303714 (9:00 AM to 5:30 PM) Last Updated On : 18/09/2026 | v- 3.1.27\n[View More]: About Us Something went wrong. Please try again later. Ok Are you sure you want to sign out? Cancel Sign Out | | English English Theme Sign In About Us Home About Us Our Vision Our vision is to make citizens life easier Our Mission Our mission is to streamline the government - user interface for government schemes and benefits. Reduce time and effort required to find and avail a government scheme myScheme is a National Platform that aims to offer one-stop search and discovery of the Government schemes. It provides an innovative, technology-based solution to discover scheme information based upon the eligibility of the citizen. The platform helps the citizen to find the right Government schemes for them. It also guides on how to apply for different Government schemes. Thus no need to visit multiple Government websites. myScheme platform is Developed, Managed, and Operated by National e-Governance Division (NeGD), with the Support of Ministry of Electronics and Information Technology (MeitY), Department of Administrative Reforms and Public Grievance (DARPG) and in partnership with other Central and State Ministries/Departments. Eligibility Check You can check your eligibility for schemes using different criteria and personal attribute Scheme Finder Fast and easy searching with filter based drill downs for various Government Schemes Scheme in detail Deep dive into dedicated scheme pages for fine grained scheme details before you apply © 2026 Powered by Digital India Corporation(",
+    "sections": [
+      {
+        "heading": "About",
+        "text": "myScheme is a National Platform that aims to offer one-stop search and discovery of the Government schemes."
+      },
+      {
+        "heading": "Quick Links",
+        "text": "About Us Contact Us Screen Reader Accessibility Statement Frequently Asked Questions Disclaimer Terms & Conditions Dashboard"
+      },
+      {
+        "heading": "Get in touch",
+        "text": "4th Floor, NeGD, Electronics Niketan, 6 CGO Complex, Lodhi Road, New Delhi - 110003, India"
+      }
+    ],
+    "tables": [],
+    "notices": [
+      {
+        "text": "#GOVERNMENTSCHEMES",
+        "url": "https://www.myscheme.gov.in"
+      },
+      {
+        "text": "Find schemes based",
+        "url": "https://www.myscheme.gov.in"
+      },
+      {
+        "text": "Easy steps to apply",
+        "url": "https://www.myscheme.gov.in"
+      },
+      {
+        "text": "for Government Schemes",
+        "url": "https://www.myscheme.gov.in"
+      },
+      {
+        "text": "myScheme is a National Platform that aims to offer one-stop search and discovery of the Government schemes.",
+        "url": "https://www.myscheme.gov.in"
+      },
+      {
+        "text": "It provides an innovative, technology-based solution to discover scheme information based upon the eligibility of the citizen.",
+        "url": "https://www.myscheme.gov.in"
+      },
+      {
+        "text": "The platform helps the citizen to find the right Government schemes for them. It also guides on how to apply for different Government schemes. Thus no need to visit multiple Government websites.",
+        "url": "https://www.myscheme.gov.in"
+      },
+      {
+        "text": "What is myScheme, and how is it different from other government portals?",
+        "url": "https://www.myscheme.gov.in"
+      },
+      {
+        "text": "Our mission is to streamline the government - user interface for government schemes and benefits.",
+        "url": "https://www.myscheme.gov.in/about"
+      },
+      {
+        "text": "Reduce time and effort required to find and avail a government scheme",
+        "url": "https://www.myscheme.gov.in/about"
+      }
+    ],
+    "crawledLinks": [
+      {
+        "text": "View More",
+        "url": "https://www.myscheme.gov.in/about"
+      }
+    ],
+    "files": [],
+    "contentHash": "69d358efa6797187",
+    "changed": false,
+    "error": null
+  },
+  "mnre-kusum": {
+    "id": "mnre-kusum",
+    "name": "PM-KUSUM (MNRE)",
+    "url": "https://mnre.gov.in",
+    "official": true,
+    "status": "ok",
+    "httpStatus": 200,
+    "latencyMs": 536,
+    "fetchedAt": "2026-11-21T07:54:09.352985+00:00",
+    "fetchedAtEpoch": 1795247649.3530216,
+    "title": "",
+    "bodyText": "",
+    "sections": [],
+    "tables": [],
+    "notices": [],
+    "crawledLinks": [],
+    "files": [],
+    "contentHash": "4f53cda18c2baa0c",
+    "changed": false,
+    "error": null
+  },
+  "mahadbt-agri": {
+    "id": "mahadbt-agri",
+    "name": "MahaDBT Agriculture",
+    "url": "https://mahadbt.maharashtra.gov.in",
+    "official": true,
+    "status": "ok",
+    "httpStatus": 200,
+    "latencyMs": 479,
+    "fetchedAt": "2026-11-21T07:54:09.716109+00:00",
+    "fetchedAtEpoch": 1795247649.716142,
+    "title": "",
+    "bodyText": "Skip To Main Content Skip To Navigation Home A+ A= A- मराठी Benefit Schemes Post Matric Scholarship Social Justice and Special Assistance Department Tribal Development Department Directorate of Higher Education Directorate of Technical Education School Education and Sports Department OBC, SEBC, VJNT & SBC Welfare Department Directorate of Medical Education and Research Minority Development Department Directorate of Art Mahatma Phule Krishi Vidyapeeth, Rahuri MAFSU Nagpur Skill Development, Employement And Entrepreneurship Department Government of India Post-Matric Scholarship Post-Matric Tuition Fee and Examination Fee (Freeship) Maintenance Allowance for student Studying in professional courses Rajarshri Chhatrapati Shahu Maharaj Merit Scholarship Post-Matric Scholarship for persons with disability Vocational Training Fee reimbursement for the students belonging to Scheduled Caste category Students Post Matric Scholarship Scheme (Government Of India ) Tuition Fee & Exam Fee for Tribal Students ( Freeship) Vocational Education Fee Reimbursement Vocational Education Maintenance Allowance Vocational Training Fee reimbursement for the students belonging to Scheduled Tribe Category Rajarshi Chhatrapati Shahu Maharaj Shikshan Shulkh Shishyavrutti Scheme Assistance to Meritorious Students scholarship - Junior Level Education Concession to the Children of Ex-Servicemen Eklavya Scholarship State Government Open Merit Scholarship Scholarship to Meritorious students possessing Mathematics /Physics Government Vidyaniketan Scholarship State Government Daxshina Adhichatra Scholarship Government Research Adhichatra Education Concession to the Children Freedom Fighter Jawaharlal Nehru University Scholarship Assistance to Meritorious Students scholarship - Senior Level Dr. Punjabrao Deshmukh Vasatigruh Nirvah Bhatta Yojna (DHE) Rajarshi Chhatrapati Shahu Maharaj Shikshan Shulkh Shishyavrutti Yojna(EBC) Dr Panjabrao Deshmukh Vastigruh Nirvah Bhatta Yojna(DTE) Open Merit Scholarships in Junior College Merit Scholarships for Economically Backward Class Students Post Matric Scholarship to VJNT Students Tuition Fees and Examination Fees to VJNT Students Payment of Maintenance Allowance to VJNT and SBC Students Studying in Professional Courses and Living in Hostel Attached to Professional Colleges Rajarshi Chhatrapati Shahu Maharaj Merit Scholarship for students studying in 11th & 12th standard of VJNT & SBC category Post Matric Scholarship to OBC Students Post Matric Scholarship to SBC Students Tuition Fees and Examination Fees to OBC Students Tuition Fees and Examination Fees to SBC Students Vocational Training Fee reimbursement for the OBC, SEBC, VJNT & SBC Welfare Department students Post Matric Scholarship to the Girls Belonging to Other Backward Classes taking admission in Professional Courses Payment of Tuition Fees and Examination Fees to OBC Girls Pursuing Professional Courses Rajarshri Chhatrapati Shahu Maharaj Fee Reimbursement Scheme Dr Panjabrao Deshmukh Hostel Maintenance Allowance Education Fee reimbursement for open category students affected due to SEBC and EWS reservation in medical and Dental colleges Reimbursement of tuition fee and examination fee for girls under Rajarshri Chhatrapati Shahu Maharaj Tuition Fee Scholarship Scheme (100% Tuition Fee + Exam Fee) State Minority Scholarship Part II (DHE) Scholarship for students of minority communities pursuing Higher and Professional courses(DTE) Scholarship for students of minority communities pursuing Higher and Professional courses(DMER) Scholarship for students of minority communities pursuing Higher and Professional courses of MCAER Department Rajarshi Chhatrapati Shahu Maharaj Shikshan Shulkh Shishyavrutti Yojna(EBC) Dr. Panjabrao Deshmukh Vasatigruh Nirvah Bhatta Yojna (DOA) Rajarshi Chhatrapati Shahu Maharaj Shikshan Shulkh Shishyavrutti Yojna(EBC) Dr. Panjabrao Deshmukh Vasatigruh Nirvah Bhatta Yojna (AGR) Rajarshi Chhatrapati Shahu Maharaj Shikshan Shulkh Shishyavrutti Yojna(EBC) Dr. Panjabrao Deshmukh Vasatigruh Nirvah Bhatta Yojna (MAFSU) Vocational Training Fee reimbursement for the students belonging to socially and educationally backward class and Open Category (Economically weaker section) students Stipend of Rs. 500 per month for trainees in Craftsman Training Scheme in Govt ITI Pre Matric Scholarship Pension Schemes Farmer Schemes Labour Schemes Special Assistance Schemes Application acceptance A.Y. 2019-20 has been extended till 15th January 2020. Please\n[Government of India Post-Matric Scholarship]: SchemeData Skip To Main Content Skip To Navigation Main Home A+ A= A- मराठी How to Apply Online ? Benefit Schemes Post Matric Scholarship Social Justice and Special Assistance Department Tribal Development Department Directorate of Higher Education Directorate of Technical Education School Education and Sports Department OBC, SEBC, VJNT & SBC Welfare Department Directorate of Medical Education and Research Minority Development Department Directorate of Art Mahatma Phule Krishi Vidyapeeth, Rahuri MAFSU Nagpur Skill Development, Employement And Entrepreneurship Department Government of India Post-Matric Scholarship Post-Matric Tuition Fee and Examination Fee (Freeship) Maintenance Allowance for student Studying in professional courses Rajarshri Chhatrapati Shahu Maharaj Merit Scholarship Post-Matric Scholarship for persons with disability Vocational Training Fee reimbursement for the students belonging to Scheduled Caste category Students Post Matric Scholarship Scheme (Government Of India ) Tuition Fee & Exam Fee for Tribal Students ( Freeship) Vocational Education Fee Reimbursement Vocational Education Maintenance Allowance Vocational Training Fee reimbursement for the students belonging to Scheduled Tribe Category Rajarshi Chhatrapati Shahu Maharaj Shikshan Shulkh Shishyavrutti Scheme Assistance to Meritorious Students scholarship - Junior Level Education Concession to the Children of Ex-Servicemen Eklavya Scholarship State Gov",
+    "sections": [
+      {
+        "heading": "Notice",
+        "text": "Citizen Charter is now live on MahaDBT Portal- Users can check the expected timelines for application approval and download the Charter for detailed information. Granular Application Tracking is now live on MahaDBT Portal- Users can now track application to view real-time status and monitor progress at every stage of their application. Download Colleges list"
+      },
+      {
+        "heading": "All Schemes",
+        "text": "Social Justice and Special Assistance Department Government of India Post-Matric Scholarship Post-Matric Tuition Fee and Examination Fee (Freeship) Maintenance Allowance for student Studying in professional courses Rajarshri Chhatrapati Shahu Maharaj Merit Scholarship Post-Matric Scholarship for persons with disability Post Matric Scholarship Tribal Development Department Post Matric Scholarship S"
+      },
+      {
+        "heading": "सूचना",
+        "text": "शिष्यवृत्ती/ सरकारी अनुदान बँकेच्या खात्यात जमा होण्यासाठी आपल्या खात्याला आधार सीड असणे गरजेचे आहे. तरी काही विद्यार्थ्यांना बँक खात्यात आधार सीड नसल्यामुळे पोस्ट मॅट्रिक शिष्यवृत्ती जमा होण्यास व्यत्यय येत आहे. असे विद्यार्थी जवळच्या पोस्ट ऑफिसला भेट देऊन ‘इंडिया पोस्ट पेमेंट्स बँकेचे’ आधार सीड असलेले खाते उघडण्याचा लाभ घेऊ शकतात. खाते उघडण्यासाठी पुढील बाबींची आवशकता आहे.-"
+      },
+      {
+        "heading": "Notice",
+        "text": "Aadhaar seeding to bank account is an important requirement for beneficiaries of various DBT schemes to receive DBT benefits in the account. It is hereby informed that students who are not able to receive their Post Matric Scholarship DBT due to issues in Aadhaar seeding can visit the nearest Post Office to open an India Post Payments Bank (IPPB) account with Aadhaar seeding. Following documents a"
+      },
+      {
+        "heading": "Citizen Charter",
+        "text": "S.N. Department विभाग Download 1 Animal Husbandry Department पशुसंवर्धन विभाग 2 Fisheries Department मत्स्यव्यवसाय विभाग 3 Forest Department वन विभाग 4 Department of Higher Education उच्च शिक्षण विभाग 5 Department of Technical Education तंत्रशिक्षण विभाग 7 Medical Education & Drugs Department वैद्यकीय शिक्षण आणि औषधी द्रव्ये विभाग 8 Other Backward Bahujan Welfare Department इतर मागास बहुजन कल्याण "
+      },
+      {
+        "heading": "Online Registration",
+        "text": "Applicants will be able to register themselves through online registration process."
+      }
+    ],
+    "tables": [
+      [
+        "S.N.",
+        "Department",
+        "विभाग",
+        "Download"
+      ],
+      [
+        "1",
+        "Animal Husbandry Department",
+        "पशुसंवर्धन विभाग"
+      ],
+      [
+        "2",
+        "Fisheries Department",
+        "मत्स्यव्यवसाय विभाग"
+      ],
+      [
+        "3",
+        "Forest Department",
+        "वन विभाग"
+      ],
+      [
+        "4",
+        "Department of Higher Education",
+        "उच्च शिक्षण विभाग"
+      ],
+      [
+        "5",
+        "Department of Technical Education",
+        "तंत्रशिक्षण विभाग"
+      ]
+    ],
+    "notices": [
+      {
+        "text": "Post Matric Scholarship Scheme (Government Of India )",
+        "url": "https://mahadbt.maharashtra.gov.in/SchemeData/SchemeData?str=E9DDFA703C38E51A668ED132B54E2162E54C475F826D85C79DA948301E5F7772"
+      },
+      {
+        "text": "Rajarshi Chhatrapati Shahu Maharaj Shikshan Shulkh Shishyavrutti Scheme",
+        "url": "https://mahadbt.maharashtra.gov.in/SchemeData/SchemeData?str=E9DDFA703C38E51AA86467549C6E0CFFDFD61E992C8610ED352EC9DEF886C9CD"
+      },
+      {
+        "text": "Rajarshri Chhatrapati Shahu Maharaj Fee Reimbursement Scheme",
+        "url": "https://mahadbt.maharashtra.gov.in/SchemeData/SchemeData?str=E9DDFA703C38E51A85D4A975C5D5142BC657258E23D57FBDAD7167545F0B41EF"
+      },
+      {
+        "text": "Reimbursement of tuition fee and examination fee for girls under Rajarshri Chhatrapati Shahu Maharaj Tuition Fee Scholarship Scheme (100% Tuition Fee + Exam Fee)",
+        "url": "https://mahadbt.maharashtra.gov.in/SchemeData/SchemeData?str=E9DDFA703C38E51A8813422C6527A70BC8F386DEBD6292C54D5D3E063C32F598"
+      },
+      {
+        "text": "Stipend of Rs. 500 per month for trainees in Craftsman Training Scheme in Govt ITI",
+        "url": "https://mahadbt.maharashtra.gov.in/SchemeData/SchemeData?str=E9DDFA703C38E51A8D6E1E4E8866EE600571B0A841AF768C93C24C5AEB049B3D"
+      },
+      {
+        "text": "Special Assistance Schemes",
+        "url": "https://mahadbt.maharashtra.gov.in"
+      },
+      {
+        "text": "Application acceptance A.Y. 2019-20 has been extended till 15th January 2020. Please refer the notice section for more details.",
+        "url": "https://mahadbt.maharashtra.gov.in"
+      },
+      {
+        "text": "Guidelines for Aadhaar linking to bank account",
+        "url": "https://mahadbt.maharashtra.gov.in#"
+      },
+      {
+        "text": "How to Apply Online ?",
+        "url": "https://mahadbt.maharashtra.gov.in/home/flow"
+      }
+    ],
+    "crawledLinks": [
+      {
+        "text": "Government of India Post-Matric Scholarship",
+        "url": "https://mahadbt.maharashtra.gov.in/SchemeData/SchemeData?str=E9DDFA703C38E51ACE99921E698B1EE85995B38445F14746E1B0DD7E66FFF88B"
+      },
+      {
+        "text": "Post-Matric Tuition Fee and Examination Fee (Freeship)",
+        "url": "https://mahadbt.maharashtra.gov.in/SchemeData/SchemeData?str=E9DDFA703C38E51AE0CB048159E784170A4F3BD768B3A64E4772B0EF7B9990B2"
+      }
+    ],
+    "files": [],
+    "contentHash": "3d30bf1fb26b78bf",
+    "changed": false,
+    "error": null
+  },
+  "pgs-india": {
+    "id": "pgs-india",
+    "name": "PGS-India Organic",
+    "url": "https://pgsindia-ncof.gov.in",
+    "official": true,
+    "status": "ok",
+    "httpStatus": 200,
+    "latencyMs": 4539,
+    "fetchedAt": "2026-11-21T07:54:13.409844+00:00",
+    "fetchedAtEpoch": 1795247653.4098878,
+    "title": "PGSI - Home",
+    "bodyText": "PGSI - Home X NATURAL FARMING CERTIFICATION FAQs National Centre For Organic and Natural Farming Skip to Main Content Screen Reader Access English Hindi Register Login Home About Us PGS India Operational Manual Revised PGS India Operational Manual English Revised PGS India Operational Manual Hindi PGS India Standards Revised PGS India Operational Manual Kannada Natural Farming Certification Operational Structure Zonal Council Regional Council Contact Us Traceability of Certified Products PGS India PGS India PGSI India PGSI PGSI PGSI PGSI PGSI PGSI PGSI PGSI PGSI PGSI PGSI Announcement 04 July 2025 - Circular regd LAC 08 July 2025 - Authorization of Regional Councils under NFCS-reg. 29 August 2025 - Unblocked Regional Councils List 01 September 2025 - Authorized NF RCs for Natural Farming Certification System 10 September 2025 - Suspension of Regional Councils 25 November 2025 - Authorization of Regional councils for Natural Farming Certification 25 November 2025 - Authorization of Regional councils for Organic Farming Certification 02 December 2025 - Circular RC Performance 03 December 2025 - Permanent Suspension of Regional Council - regarding View All Regional Council 97 Total Number of Groups 78689 Total Number of Farmers 2488419 Total number of valid Certificates 255385 Certified Cumulative Area (Ha) 1716339 Welcome to PGS India PGS-India (Participatory Guarantee System of India) is a quality assurance initiative that is locally relevant, emphasize the participation of stakeholders, including producers and consumers and operate outside the frame of third party certification. National Project on Organic Farming (NPOF) is a continuing central sector scheme since 10th Five Year Plan. Know More Individual Farmer Local Group Large Area Certification Processor Select State --Select State-- A AND N ISLANDS ANDHRA PRADESH ARUNACHAL PRADESH ASSAM BIHAR CHANDIGARH CHHATTISGARH DADRA AND NAGAR HAVELI DAMAN AND DIU DELHI GOA GUJARAT HARYANA HIMACHAL PRADESH JAMMU AND KASHMIR JHARKHAND KARNATAKA KERALA LADAKH LAKSHADWEEP MADHYA PRADESH MAHARASHTRA MANIPUR MEGHALAYA MIZORAM NAGALAND ODISHA PUDUCHERRY PUNJAB RAJASTHAN SIKKIM TAMIL NADU TELANGANA THE DADRA AND NAGAR HAVELI AND DAMAN AND DIU TRIPURA UTTARAKHAND UTTAR PRADESH WEST BENGAL Select District --Select District-- Select Sub-District SELECT SUB-DISTRICT VIEW ALL INDIVIDUAL FARMER Select State --Select State-- A AND N ISLANDS ANDHRA PRADESH ARUNACHAL PRADESH ASSAM BIHAR CHANDIGARH CHHATTISGARH DADRA AND NAGAR HAVELI DAMAN AND DIU DELHI GOA GUJARAT HARYANA HIMACHAL PRADESH JAMMU AND KASHMIR JHARKHAND KARNATAKA KERALA LADAKH LAKSHADWEEP MADHYA PRADESH MAHARASHTRA MANIPUR MEGHALAYA MIZORAM NAGALAND ODISHA PUDUCHERRY PUNJAB RAJASTHAN SIKKIM TAMIL NADU TELANGANA THE DADRA AND NAGAR HAVELI AND DAMAN AND DIU TRIPURA UTTARAKHAND UTTAR PRADESH WEST BENGAL Select District --Select District-- View All Group Select State --Select State-- A AND N ISLANDS ANDHRA PRADESH ARUNACHAL PRADESH ASSAM BIHAR CHANDIGARH CHHATTISGARH DADRA AND NAGAR HAVELI DAMAN AND DIU DELHI GOA GUJARAT HARYANA HIMACHAL PRADESH JAMMU AND KASHMIR JHARKHAND KARNATAKA KERALA LADAKH LAKSHADWEEP MADHYA PRADESH MAHARASHTRA MANIPUR MEGHALAYA MIZORAM NAGALAND ODISHA PUDUCHERRY PUNJAB RAJASTHAN SIKKIM TAMIL NADU TELANGANA THE DADRA AND NAGAR HAVELI AND DAMAN AND DIU TRIPURA UTTARAKHAND UTTAR PRADESH WEST BENGAL Select District --Select District-- View All LAC Select State --Select State-- A AND N ISLANDS ANDHRA PRADESH ARUNACHAL PRADESH ASSAM BIHAR CHANDIGARH CHHATTISGARH DADRA AND NAGAR HAVELI DAMAN AND DIU DELHI GOA GUJARAT HARYANA HIMACHAL PRADESH JAMMU AND KASHMIR JHARKHAND KARNATAKA KERALA LADAKH LAKSHADWEEP MADHYA PRADESH MAHARASHTRA MANIPUR MEGHALAYA MIZORAM NAGALAND ODISHA PUDUCHERRY PUNJAB RAJASTHAN SIKKIM TAMIL NADU TELANGANA THE DADRA AND NAGAR HAVELI AND DAMAN AND DIU TRIPURA UTTARAKHAND UTTAR PRADESH WEST BENGAL Select District --Select District-- VIEW ALL PROCESSOR Guiding Principles of PGS India Participation Participation is an essential and dynamic part ofPGS, Participation embodies the principle of collective. Read More Shared Vision Collective responsibility for implementation and decision making is driven. Read More Transparency Transparency is created by having all stakeholders, including producers and consumers Read More Trust The integrity base upon which PGS-India programme is built, is rooted in the idea that producers Read More Horizontality PGS India is intended to be non-hierarchical at group l",
+    "sections": [
+      {
+        "heading": "PGS India",
+        "text": "PGS India"
+      },
+      {
+        "heading": "PGSI India",
+        "text": "PGSI"
+      },
+      {
+        "heading": "PGSI",
+        "text": "PGSI"
+      },
+      {
+        "heading": "PGSI",
+        "text": "PGSI"
+      },
+      {
+        "heading": "PGSI",
+        "text": "PGSI"
+      },
+      {
+        "heading": "PGSI",
+        "text": "PGSI"
+      }
+    ],
+    "tables": [],
+    "notices": [
+      {
+        "text": "04 July 2025 - Circular regd LAC",
+        "url": "https://pgsindia-ncof.gov.in"
+      },
+      {
+        "text": "08 July 2025 - Authorization of Regional Councils under NFCS-reg.",
+        "url": "https://pgsindia-ncof.gov.in"
+      },
+      {
+        "text": "29 August 2025 - Unblocked Regional Councils List",
+        "url": "https://pgsindia-ncof.gov.in"
+      },
+      {
+        "text": "01 September 2025 - Authorized NF RCs for Natural Farming Certification System",
+        "url": "https://pgsindia-ncof.gov.in"
+      },
+      {
+        "text": "10 September 2025 - Suspension of Regional Councils",
+        "url": "https://pgsindia-ncof.gov.in"
+      },
+      {
+        "text": "25 November 2025 - Authorization of Regional councils for Natural Farming Certification",
+        "url": "https://pgsindia-ncof.gov.in"
+      },
+      {
+        "text": "25 November 2025 - Authorization of Regional councils for Organic Farming Certification",
+        "url": "https://pgsindia-ncof.gov.in"
+      },
+      {
+        "text": "02 December 2025 - Circular RC Performance",
+        "url": "https://pgsindia-ncof.gov.in"
+      }
+    ],
+    "crawledLinks": [],
+    "files": [],
+    "contentHash": "5fd198cdd56a26e8",
+    "changed": false,
+    "error": null
+  },
+  "krishak-bandhu": {
+    "id": "krishak-bandhu",
+    "name": "Krishak Bandhu (WB)",
+    "url": "https://krishakbandhu.wb.gov.in",
+    "official": true,
+    "status": "error",
+    "error": "",
+    "fetchedAt": "2026-11-21T07:54:14.845766+00:00",
+    "fetchedAtEpoch": 1795247654.845797,
+    "title": "",
+    "bodyText": "",
+    "sections": [],
+    "tables": [],
+    "notices": [],
+    "crawledLinks": [],
+    "files": [],
+    "contentHash": null,
+    "changed": false
+  }
+}

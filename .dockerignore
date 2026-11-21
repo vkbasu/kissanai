@@ -1,0 +1,44 @@
+# Git and CI/CD
+.git
+.gitignore
+.github
+
+# Secrets and environment files
+.env
+env/.env
+*.env
+!.env.example
+!env/.env.example
+
+# Python virtual environments
+.venv
+venv
+ENV/
+env_dev/
+
+# Python byte code and caches
+__pycache__/
+*/**/__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# IDE and OS metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+.dockerignore

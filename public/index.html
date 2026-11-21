@@ -1,0 +1,1061 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Farmer · Live Globe &amp; Voice AI Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.css" crossorigin="">
+  <script src="https://unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js" crossorigin=""></script>
+  <style>
+    :root {
+      --leaf: #1F3B2D;
+      --leaf-2: #2F5A43;
+      --wheat: #E9D9A8;
+      --soil: #6B4A2F;
+      --ink: #1C1F1A;
+      --muted: #5B6157;
+      --paper: #F7F9F4;
+      --rule: #D6DDD2;
+      --focus: #D98A2B;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font: 400 15.5px/1.6 "IBM Plex Sans", system-ui, sans-serif;
+      background-color: var(--paper);
+      background-image:
+        linear-gradient(to right, rgba(31, 59, 45, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(31, 59, 45, 0.04) 1px, transparent 1px);
+      background-size: 36px 36px;
+    }
+    h1, h2, h3 { font-family: Fraunces, Georgia, serif; font-weight: 700; letter-spacing: -0.01em; margin: 0; line-height: 1.15; }
+    h1 { font-size: clamp(1.7rem, 3vw, 2.4rem); line-height: 1.08; }
+    h2 { font-size: 1.32rem; }
+    h3 { font-size: 1.12rem; }
+    p { margin: 0 0 10px; }
+    ul { margin: 0; padding-left: 20px; }
+    a { color: var(--leaf-2); }
+    .muted { color: var(--muted); font-size: .88rem; }
+
+    .app-shell { display: grid; grid-template-columns: minmax(0, 1fr) 420px; min-height: 100vh; }
+    @media (max-width: 980px) { .app-shell { grid-template-columns: 1fr; } }
+
+    .left-col { min-width: 0; padding-bottom: 56px; }
+    .left-inner { max-width: 960px; margin: 0 auto; padding: 0 22px; }
+
+    .hero {
+      position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #162B20 0%, #244634 60%, #2F5A43 100%);
+      color: #FAFBF8; padding: 24px 22px 28px; border-bottom: 4px solid var(--wheat);
+    }
+    .hero-bg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.22; pointer-events: none; }
+    .hero-top {
+      position: relative; z-index: 2; max-width: 960px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap;
+    }
+    .live-pill {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: .76rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+      padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.14); color: var(--wheat); margin-bottom: 8px;
+    }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #4ADE80; animation: pulse 2s infinite; }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+    }
+    .lede { max-width: 54ch; margin: 8px 0 0; color: #D9E4DA; font-size: .96rem; }
+
+    .corner-controls { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+    .browse-top-btn {
+      background: var(--wheat); color: var(--ink); font-weight: 700;
+      padding: 9px 14px; border-radius: 7px; border: 0; cursor: pointer; font-size: .88rem;
+    }
+    .browse-top-btn:hover { background: #F3E7C1; }
+    .corner-lang {
+      display: flex; flex-direction: column; gap: 3px;
+      background: rgba(255,255,255,0.12); padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.22);
+    }
+    .corner-lang label { font-size: .7rem; color: var(--wheat); margin: 0; text-transform: uppercase; }
+    .corner-lang select {
+      width: auto; min-width: 135px; padding: 5px 8px; font-size: .85rem;
+      background: #183024; color: #fff; border: 1px solid rgba(255,255,255,0.35); border-radius: 5px;
+    }
+
+    .card-panel {
+      margin-top: 22px; padding: 18px 20px; background: rgba(255,255,255,0.97);
+      border: 1px solid var(--rule); border-radius: 10px; box-shadow: 0 2px 10px rgba(31,59,45,0.04);
+    }
+    .map-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+    .map-toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .map-toolbar input { flex: 1; min-width: 200px; }
+    #globe-map { width: 100%; height: 340px; border-radius: 8px; border: 1px solid #B9C4B4; background: #0F231A; overflow: hidden; }
+    .map-coords { margin-top: 8px; font-size: .84rem; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+    form.profile { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 14px 18px; }
+    label, .legend { display: block; font-weight: 600; font-size: .86rem; margin-bottom: 4px; color: var(--leaf); }
+    fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+    input, select {
+      width: 100%; font: inherit; padding: 9px 10px; border: 1px solid #B9C4B4;
+      border-radius: 6px; background: #fff; color: var(--ink);
+    }
+    input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible {
+      outline: 3px solid var(--focus); outline-offset: 2px;
+    }
+    .segment { position: relative; display: flex; flex-wrap: wrap; }
+    .segment input { position: absolute; opacity: 0; pointer-events: none; }
+    .segment label {
+      flex: 1; min-width: 66px; margin: 0; padding: 8px 6px; text-align: center; cursor: pointer;
+      border: 1px solid #B9C4B4; background: #fff; color: var(--ink); font-weight: 500; font-size: .85rem;
+    }
+    .segment label:first-of-type { border-radius: 6px 0 0 6px; }
+    .segment label:last-of-type { border-radius: 0 6px 6px 0; }
+    .segment input:checked + label { background: var(--leaf); border-color: var(--leaf); color: #fff; }
+    button {
+      font: 600 .9rem "IBM Plex Sans", sans-serif; background: var(--leaf); color: #fff;
+      border: 0; padding: 9px 15px; border-radius: 6px; cursor: pointer;
+    }
+    button:hover { background: var(--leaf-2); }
+    button.secondary { background: transparent; color: var(--leaf); border: 1px solid #B9C4B4; padding: 8px 13px; }
+    button.secondary:hover { background: #EFF3EC; }
+    .status { color: var(--soil); font-size: .86rem; }
+
+    .live-panel { border-left: 5px solid var(--focus); }
+    .live-site-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
+    .live-site-card { padding: 12px 14px; border: 1px solid var(--rule); border-radius: 8px; background: #FAFBF8; }
+    .badge {
+      display: inline-block; font-size: .72rem; font-weight: 600; padding: 2px 8px;
+      border-radius: 999px; background: #E9EFE6; color: var(--leaf);
+    }
+    .badge.live-ok { background: #E1F2E6; color: #1B5E20; }
+    .badge.live-err { background: #F5E6E4; color: #8A2B1F; }
+    .badge.official { background: #F5EBD0; color: var(--soil); }
+    .note { margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--rule); color: var(--muted); font-size: .86rem; }
+
+    /* Permanent Right-Side Chat Panel + Model Switcher */
+    .chat-sidebar {
+      position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
+      background: #fff; border-left: 2px solid var(--leaf); box-shadow: -4px 0 20px rgba(31, 59, 45, 0.08); z-index: 10;
+    }
+    @media (max-width: 980px) { .chat-sidebar { position: static; height: 600px; border-left: 0; border-top: 2px solid var(--leaf); } }
+    .chat-header { background: var(--leaf); color: #fff; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+    .chat-header-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .chat-header h2 { font-size: 1.15rem; color: #fff; }
+    .live-mode-btn {
+      background: rgba(255,255,255,0.16); color: #fff; border: 1px solid rgba(255,255,255,0.35);
+      padding: 5px 11px; border-radius: 999px; font-size: .76rem; font-weight: 600; cursor: pointer;
+    }
+    .live-mode-btn[data-active="true"] { background: #DC2626; border-color: #FCA5A5; color: #fff; }
+    .chat-subbar { font-size: .75rem; color: #D9E4DA; display: flex; justify-content: space-between; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+    .model-bar {
+      background: #173024; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.12);
+      display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; align-items: center;
+    }
+    .model-bar select {
+      padding: 4px 6px; font-size: .76rem; background: #234534; color: #fff;
+      border: 1px solid rgba(255,255,255,0.28); border-radius: 4px;
+    }
+    .sync-models-btn {
+      background: var(--wheat); color: var(--ink); font-size: .74rem; font-weight: 700;
+      padding: 5px 8px; border-radius: 4px; border: 0; cursor: pointer; white-space: nowrap;
+    }
+
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; background: #F4F7F2;
+    }
+    .msg { max-width: 92%; padding: 10px 12px; border-radius: 8px; font-size: .91rem; line-height: 1.45; }
+    .msg.user { align-self: flex-end; background: var(--leaf); color: #fff; border-bottom-right-radius: 2px; }
+    .msg.bot { align-self: flex-start; background: #fff; color: var(--ink); border: 1px solid var(--rule); border-bottom-left-radius: 2px; }
+    .msg-sources { margin-top: 6px; font-size: .78rem; color: var(--muted); }
+    .msg-meta { display: flex; gap: 8px; align-items: center; margin-top: 6px; font-size: .74rem; color: var(--muted); }
+    .msg-play { background: #EFF3EC; color: var(--leaf); border: 1px solid #B9C4B4; padding: 3px 9px; font-size: .76rem; border-radius: 4px; }
+
+    .chat-composer { padding: 12px; border-top: 1px solid var(--rule); background: #fff; display: flex; flex-direction: column; gap: 8px; }
+    .chat-input-row { display: flex; gap: 8px; }
+    .chat-input-row input { flex: 1; padding: 9px 11px; font-size: .92rem; }
+    .chat-action-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    button.mic-btn { background: #B84A27; color: #fff; padding: 8px 12px; font-size: .86rem; }
+    button.mic-btn[data-recording="true"] { background: #7D230B; }
+
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(20, 34, 26, 0.65);
+      display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 1000;
+    }
+    .modal-backdrop[hidden] { display: none; }
+    .modal {
+      width: 100%; max-width: 820px; max-height: 86vh; background: #fff;
+      border-radius: 12px; border: 2px solid var(--leaf); display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.28);
+    }
+    .modal-header { background: var(--leaf); color: #fff; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-body { padding: 16px 18px; overflow-y: auto; flex: 1; }
+    .source-add-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .source-add-row input { flex: 1; min-width: 200px; }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- LEFT WORKSPACE -->
+    <div class="left-col">
+      <header class="hero">
+        <svg class="hero-bg" viewBox="0 0 1200 320" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <circle cx="1040" cy="70" r="46" fill="none" stroke="#E9D9A8" stroke-width="2" stroke-dasharray="6 6"/>
+          <circle cx="1040" cy="70" r="22" fill="#E9D9A8"/>
+          <path d="M0 240 Q 260 175 560 225 T 1200 195 L 1200 320 L 0 320 Z" fill="none" stroke="#E9D9A8" stroke-width="2"/>
+          <path d="M0 265 Q 320 210 640 255 T 1200 230" fill="none" stroke="#9CC2A7" stroke-width="1.5" stroke-dasharray="8 6"/>
+        </svg>
+
+        <div class="hero-top">
+          <div>
+            <div class="live-pill">
+              <span class="live-dot" aria-hidden="true"></span>
+              <span data-i18n="liveBadge">LIVE INTERNET &amp; OFFICIAL PORTALS</span>
+            </div>
+            <h1 data-i18n="heroTitle">Live Farmer Assistant</h1>
+            <p class="lede" data-i18n="heroSubtitle">Pinpoint your farm on the 3D globe, ask anything in your language, and get real-time answers from live state &amp; national websites.</p>
+          </div>
+
+          <div class="corner-controls">
+            <button type="button" class="browse-top-btn" id="open-browse-btn" data-i18n="browseTopBtn">📋 Browse Live Portals</button>
+            <div class="corner-lang">
+              <label for="ui-lang" data-i18n="langLabel">Language</label>
+              <select id="ui-lang" aria-label="Language">
+                <option value="en-IN">English</option>
+                <option value="hi-IN">हिन्दी (Hindi)</option>
+                <option value="mr-IN">मराठी (Marathi)</option>
+                <option value="bn-IN">বাংলা (Bengali)</option>
+                <option value="or-IN">ଓଡ଼ିଆ (Odia)</option>
+                <option value="pa-IN">ਪੰਜਾਬੀ (Punjabi)</option>
+                <option value="kn-IN">ಕನ್ನಡ (Kannada)</option>
+                <option value="ta-IN">தமிழ் (Tamil)</option>
+                <option value="te-IN">తెలుగు (Telugu)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="left-inner">
+        <!-- Interactive 3D Globe Map -->
+        <section class="card-panel" aria-labelledby="map-title">
+          <div class="map-head">
+            <div>
+              <h2 id="map-title" data-i18n="mapTitle">3D Globe Farm Map</h2>
+              <p class="muted" style="margin:2px 0 0;" data-i18n="mapHint">Search your village/district, use GPS, or zoom in and click anywhere on the 3D globe to drop a pin.</p>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" class="secondary" id="toggle-layer-btn" data-i18n="satBtn">🛰️ Satellite / Street</button>
+              <button type="button" class="secondary" id="gps-btn" data-i18n="gpsBtn">📍 Use my GPS</button>
+            </div>
+          </div>
+
+          <form class="map-toolbar" id="map-search-form">
+            <input id="map-search-input" type="search" placeholder="Search village, taluka, district, or PIN code…">
+            <button type="submit" class="secondary" data-i18n="findLocBtn">Find</button>
+          </form>
+
+          <div id="globe-map" role="region" aria-label="Interactive 3D Globe Map"></div>
+          <div class="map-coords">
+            <span id="map-status" data-i18n="mapNoPin">Click anywhere on the 3D globe to pinpoint your farm.</span>
+            <span id="weather-chip" style="color:var(--leaf); font-weight:600;"></span>
+            <span id="map-latlng"></span>
+          </div>
+        </section>
+
+        <!-- Dynamic Farm Context Parameters -->
+        <section class="card-panel" aria-labelledby="profile-title">
+          <form class="profile" id="profile">
+            <div style="grid-column: 1 / -1; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <h2 id="profile-title" data-i18n="profileTitle">Your Farm Context</h2>
+              <button type="button" class="secondary" id="reset-reask-btn" data-i18n="resetReaskBtn">🔄 Reset &amp; Re-ask</button>
+            </div>
+
+            <fieldset>
+              <legend class="legend" data-i18n="landStatus">Land status</legend>
+              <div class="segment">
+                <input type="radio" name="ownership" id="own-owner" value="owner" checked>
+                <label for="own-owner" data-i18n="owner">Owner</label>
+                <input type="radio" name="ownership" id="own-tenant" value="tenant">
+                <label for="own-tenant" data-i18n="tenant">Tenant</label>
+                <input type="radio" name="ownership" id="own-labourer" value="labourer">
+                <label for="own-labourer" data-i18n="labourer">Labourer</label>
+              </div>
+            </fieldset>
+
+            <div>
+              <label for="acres" data-i18n="acresLabel">Land size (acres)</label>
+              <input id="acres" name="acres" type="number" min="0" max="10000" step="0.1" placeholder="e.g. 2.5">
+            </div>
+
+            <div>
+              <label for="state" data-i18n="stateLabel">State</label>
+              <input id="state" name="state" type="text" placeholder="Auto-filled from globe or voice">
+            </div>
+
+            <div>
+              <label for="district" data-i18n="districtLabel">District</label>
+              <input id="district" name="district" type="text" placeholder="Auto-filled from globe or voice">
+            </div>
+
+            <div>
+              <label for="crop" data-i18n="cropLabel">Main crop</label>
+              <input id="crop" name="crop" type="text" placeholder="e.g. wheat, cotton, paddy">
+            </div>
+
+            <div>
+              <label for="irrigationType" data-i18n="irrigationLabel">Irrigation</label>
+              <input id="irrigationType" name="irrigationType" type="text" placeholder="e.g. borewell, rainfed, canal">
+            </div>
+
+            <div>
+              <label for="age" data-i18n="ageLabel">Farmer age</label>
+              <input id="age" name="age" type="number" min="18" max="100" placeholder="Optional">
+            </div>
+          </form>
+        </section>
+
+        <!-- Live Crawled Websites & Dynamic Portal Notifications -->
+        <section class="card-panel live-panel" aria-labelledby="live-title">
+          <div class="map-head">
+            <div>
+              <h2 id="live-title" data-i18n="liveTitle">Live Official Websites &amp; Notices</h2>
+              <p class="muted" id="live-summary" style="margin:2px 0 0;">Loading live portal snapshots…</p>
+            </div>
+            <button type="button" class="secondary" id="refresh-live" data-i18n="refreshLiveBtn">Refresh live sites</button>
+          </div>
+          <div class="live-site-grid" id="live-sites-grid"></div>
+        </section>
+
+        <p class="note" data-i18n="disclaimer">Answers are generated dynamically from live internet search and official state/national websites. Always verify final deadlines on the linked portal.</p>
+      </div>
+    </div>
+
+    <!-- PERMANENT RIGHT-SIDE AI CHAT PANEL -->
+    <aside class="chat-sidebar" aria-labelledby="chat-title">
+      <div class="chat-header">
+        <div class="chat-header-top">
+          <h2 id="chat-title" data-i18n="chatTitle">Farmer AI Chat</h2>
+          <button type="button" class="live-mode-btn" id="live-mode-btn" data-active="false" data-i18n="liveModeBtn">🔴 Live Hands-Free: OFF</button>
+        </div>
+        <div class="chat-subbar">
+          <span id="voice-ai-badge">Checking AI…</span>
+          <button type="button" class="secondary" id="interview-btn" style="padding:3px 9px; font-size:.75rem; color:#fff; border-color:rgba(255,255,255,0.4);" data-i18n="askMeBtn">🎙️ AI Ask Me</button>
+        </div>
+      </div>
+
+      <!-- AI Service Model Selector & Sync Bar -->
+      <div class="model-bar">
+        <select id="chat-model-select" aria-label="Select AI chat model" title="Active AI Chat Model"></select>
+        <select id="tts-model-select" aria-label="Select AI audio model" title="Active AI Audio TTS Model"></select>
+        <button type="button" class="sync-models-btn" id="sync-models-btn" title="Fetch all free Google AI Studio models">↻ Free Models</button>
+      </div>
+
+      <div class="chat-messages" id="chat-messages" aria-live="polite">
+        <div class="msg bot" data-i18n="chatWelcome">
+          Namaste! Ask me anything about state or national schemes, subsidies, or live portal notices—by voice or text. Turn on Live Hands-Free to talk back and forth without tapping buttons.
+        </div>
+      </div>
+
+      <div class="chat-composer">
+        <form class="chat-input-row" id="chat-form">
+          <input id="chat-input" type="text" placeholder="Ask anything in any language…" autocomplete="off">
+          <button type="submit" data-i18n="sendBtn">Send</button>
+        </form>
+        <div class="chat-action-row">
+          <button type="button" class="mic-btn" id="mic-btn" data-recording="false" data-i18n="speakBtn">🎤 Speak</button>
+          <button type="button" class="secondary" id="stop-audio-btn" hidden data-i18n="stopAudioBtn">Stop Audio</button>
+          <span class="status" id="voice-status" role="status" aria-live="polite"></span>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- BROWSE & ADD LIVE PORTALS POP-UP MODAL -->
+  <div class="modal-backdrop" id="browse-modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-title" style="color:#fff;" data-i18n="browseModalTitle">Saved &amp; Discovered Live Websites</h2>
+        <button type="button" class="secondary" id="close-browse-btn" style="color:#fff; border-color:rgba(255,255,255,0.5);">✕ Close</button>
+      </div>
+      <div class="modal-body">
+        <form class="source-add-row" id="add-source-form">
+          <input id="new-source-url" type="url" placeholder="Add official https:// portal URL…" required>
+          <input id="new-source-name" type="text" placeholder="Portal name (optional)" style="max-width:200px;">
+          <button type="submit">Add &amp; Fetch</button>
+        </form>
+        <div style="margin-bottom:12px;">
+          <input id="q" type="search" placeholder="Search saved websites &amp; live notices…">
+        </div>
+        <div id="browse"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (sel) => document.querySelector(sel);
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+
+    const I18N = {
+      'en-IN': {
+        liveBadge: 'LIVE INTERNET & OFFICIAL PORTALS',
+        heroTitle: 'Live Farmer Assistant',
+        heroSubtitle: 'Pinpoint your farm on the 3D globe, ask anything in your language, and get real-time answers from live state & national websites.',
+        browseTopBtn: '📋 Browse Live Portals',
+        langLabel: 'Language',
+        mapTitle: '3D Globe Farm Map',
+        mapHint: 'Search your village/district, use GPS, or zoom in and click anywhere on the 3D globe to drop a pin.',
+        satBtn: '🛰️ Satellite / Street',
+        gpsBtn: '📍 Use my GPS',
+        findLocBtn: 'Find',
+        mapNoPin: 'Click anywhere on the 3D globe to pinpoint your farm.',
+        profileTitle: 'Your Farm Context',
+        resetReaskBtn: '🔄 Reset & Re-ask',
+        landStatus: 'Land status',
+        owner: 'Owner',
+        tenant: 'Tenant',
+        labourer: 'Labourer',
+        acresLabel: 'Land size (acres)',
+        stateLabel: 'State',
+        districtLabel: 'District',
+        cropLabel: 'Main crop',
+        irrigationLabel: 'Irrigation',
+        ageLabel: 'Farmer age',
+        liveTitle: 'Live Official Websites & Notices',
+        refreshLiveBtn: 'Refresh live sites',
+        disclaimer: 'Answers are generated dynamically from live internet search and official state/national websites. Always verify final deadlines on the linked portal.',
+        chatTitle: 'Farmer AI Chat',
+        liveModeBtn: '🔴 Live Hands-Free: OFF',
+        askMeBtn: '🎙️ AI Ask Me',
+        chatWelcome: 'Namaste! Ask me anything about state or national schemes, subsidies, or live portal notices—by voice or text. Turn on Live Hands-Free to talk back and forth without tapping buttons.',
+        sendBtn: 'Send',
+        speakBtn: '🎤 Speak',
+        stopAudioBtn: 'Stop Audio',
+        browseModalTitle: 'Saved & Discovered Live Websites',
+      },
+      'hi-IN': {
+        liveBadge: 'लाइव इंटरनेट और सरकारी पोर्टल',
+        heroTitle: 'लाइव किसान सहायक',
+        heroSubtitle: '3D ग्लोब पर अपना खेत चुनें, अपनी भाषा में कुछ भी पूछें और राज्य व राष्ट्रीय वेबसाइटों से लाइव उत्तर पाएं।',
+        browseTopBtn: '📋 लाइव पोर्टल देखें',
+        langLabel: 'भाषा',
+        mapTitle: '3D ग्लोब खेत मानचित्र',
+        mapHint: 'अपना गांव/जिला खोजें, GPS उपयोग करें या 3D ग्लोब पर ज़ूम करके क्लिक करें।',
+        satBtn: '🛰️ सैटेलाइट / सड़क',
+        gpsBtn: '📍 मेरा GPS स्थान',
+        findLocBtn: 'खोजें',
+        mapNoPin: 'पिन लगाने के लिए 3D ग्लोब पर कहीं भी क्लिक करें।',
+        profileTitle: 'आपके खेत की जानकारी',
+        resetReaskBtn: '🔄 रीसेट और फिर पूछें',
+        landStatus: 'भूमि स्थिति',
+        owner: 'मालिक',
+        tenant: 'किराएदार',
+        labourer: 'मजदूर',
+        acresLabel: 'ज़मीन (एकड़)',
+        stateLabel: 'राज्य',
+        districtLabel: 'जिला',
+        cropLabel: 'मुख्य फसल',
+        irrigationLabel: 'सिंचाई',
+        ageLabel: 'आयु',
+        liveTitle: 'लाइव आधिकारिक वेबसाइट और सूचनाएं',
+        refreshLiveBtn: 'लाइव साइट रीफ्रेश करें',
+        disclaimer: 'उत्तर लाइव इंटरनेट खोज और आधिकारिक वेबसाइटों से तैयार किए जाते हैं।',
+        chatTitle: 'किसान AI चैट',
+        liveModeBtn: '🔴 लाइव हैंड्स-फ्री: बंद',
+        askMeBtn: '🎙️ AI मुझसे पूछें',
+        chatWelcome: 'नमस्ते! राज्य या राष्ट्रीय योजनाओं के बारे में अपनी भाषा में कुछ भी पूछें—बोलकर या लिखकर।',
+        sendBtn: 'भेजें',
+        speakBtn: '🎤 बोलें',
+        stopAudioBtn: 'ऑडियो रोकें',
+        browseModalTitle: 'सहेजे गए लाइव पोर्टल',
+      },
+    };
+
+    function applyLanguage(langCode) {
+      const dict = I18N[langCode] || I18N['en-IN'];
+      document.documentElement.lang = (langCode || 'en-IN').split('-')[0];
+      document.querySelectorAll('[data-i18n]').forEach((el) => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) el.textContent = dict[key];
+      });
+      if ($('#ui-lang').value !== langCode) $('#ui-lang').value = langCode;
+    }
+    $('#ui-lang').addEventListener('change', (e) => applyLanguage(e.target.value));
+
+    /* AI Service Model Selector & Live Sync */
+    function renderModelDropdowns(specs) {
+      const models = specs.availableModels || [];
+      const active = specs.active || {};
+      const chatModels = models.filter((m) => m.category === 'chat');
+      const ttsModels = models.filter((m) => m.category === 'tts');
+
+      $('#chat-model-select').innerHTML = (chatModels.length ? chatModels : [{ id: active.chatModel || 'gemini-3.5-flash-lite', displayName: active.chatModel || 'Gemini 3.5 Flash-Lite' }])
+        .map((m) => `<option value="${esc(m.id)}" ${m.id === active.chatModel ? 'selected' : ''}>Chat: ${esc(m.displayName || m.id)}</option>`)
+        .join('');
+
+      $('#tts-model-select').innerHTML = (ttsModels.length ? ttsModels : [{ id: active.ttsModel || 'gemini-3.8-flash-lite-tts', displayName: active.ttsModel || 'Gemini 3.8 Flash-Lite TTS' }])
+        .map((m) => `<option value="${esc(m.id)}" ${m.id === active.ttsModel ? 'selected' : ''}>Audio: ${esc(m.displayName || m.id)}</option>`)
+        .join('');
+    }
+
+    async function loadAiModels() {
+      try {
+        const [statusRes, modelsRes] = await Promise.all([
+          fetch('/api/voice-status'),
+          fetch('/api/ai/models'),
+        ]);
+        const statusData = await statusRes.json();
+        const specs = await modelsRes.json();
+        renderModelDropdowns(specs);
+        $('#voice-ai-badge').textContent = statusData.aiConfigured
+          ? `${(specs.availableModels || []).length} free models ready`
+          : 'Add GEMINI_API_KEY in env/.env';
+      } catch {}
+    }
+
+    async function saveSelectedModels() {
+      const chatModel = $('#chat-model-select').value;
+      const ttsModel = $('#tts-model-select').value;
+      await fetch('/api/ai/models/select', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatModel, ttsModel }),
+      });
+    }
+    $('#chat-model-select').addEventListener('change', saveSelectedModels);
+    $('#tts-model-select').addEventListener('change', saveSelectedModels);
+
+    $('#sync-models-btn').addEventListener('click', async () => {
+      const btn = $('#sync-models-btn');
+      btn.disabled = true;
+      btn.textContent = 'Syncing…';
+      try {
+        const res = await fetch('/api/ai/models/sync', { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Sync failed');
+        renderModelDropdowns(data);
+        $('#voice-ai-badge').textContent = `${(data.availableModels || []).length} free models synced`;
+      } catch (err) {
+        $('#voice-status').textContent = err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '↻ Free Models';
+      }
+    });
+
+    /* Interactive 3D Globe Map */
+    let globeMap = null;
+    let globeMarker = null;
+    let isSatellite = true;
+
+    const SATELLITE_STYLE = {
+      version: 8,
+      sources: {
+        sat: {
+          type: 'raster',
+          tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+          tileSize: 256,
+          attribution: '&copy; Esri World Imagery',
+        },
+        osm: {
+          type: 'raster',
+          tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+          tileSize: 256,
+          attribution: '&copy; OpenStreetMap',
+        },
+      },
+      layers: [
+        { id: 'sat-layer', type: 'raster', source: 'sat', layout: { visibility: 'visible' } },
+        { id: 'osm-layer', type: 'raster', source: 'osm', layout: { visibility: 'none' } },
+      ],
+    };
+
+    async function fetchLocalWeather(lat, lng) {
+      try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lng)}&current=temperature_2m,precipitation`);
+        if (!res.ok) return;
+        const w = await res.json();
+        const cur = w.current || {};
+        if (typeof cur.temperature_2m === 'number') {
+          $('#weather-chip').textContent = `☀ ${cur.temperature_2m}°C · Rain ${cur.precipitation ?? 0}mm`;
+        }
+      } catch {}
+    }
+
+    async function setGlobePin(lat, lng, flyZoom = 10) {
+      $('#map-latlng').textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      if (globeMap) {
+        if (!globeMarker) {
+          globeMarker = new maplibregl.Marker({ color: '#D98A2B', draggable: true })
+            .setLngLat([lng, lat])
+            .addTo(globeMap);
+          globeMarker.on('dragend', () => {
+            const pos = globeMarker.getLngLat();
+            setGlobePin(pos.lat, pos.lng, globeMap.getZoom());
+          });
+        } else {
+          globeMarker.setLngLat([lng, lat]);
+        }
+        globeMap.flyTo({ center: [lng, lat], zoom: Math.max(globeMap.getZoom(), flyZoom), essential: true });
+      }
+
+      fetchLocalWeather(lat, lng);
+      $('#map-status').textContent = 'Detecting state & district…';
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}`);
+        if (res.ok) {
+          const geo = await res.json();
+          const addr = geo.address || {};
+          const st = addr.state || '';
+          const dist = (addr.state_district || addr.county || addr.city || addr.town || '').replace(/ District$/i, '');
+          if (st) $('#state').value = st;
+          if (dist) $('#district').value = dist;
+          $('#map-status').textContent = [dist, st].filter(Boolean).join(', ') || 'Pinned on globe';
+          return;
+        }
+      } catch {}
+      $('#map-status').textContent = 'Location pinned on 3D globe';
+    }
+
+    if (typeof maplibregl !== 'undefined') {
+      globeMap = new maplibregl.Map({
+        container: 'globe-map',
+        style: SATELLITE_STYLE,
+        center: [79.0, 22.5],
+        zoom: 3.4,
+      });
+      globeMap.addControl(new maplibregl.NavigationControl(), 'top-right');
+      globeMap.on('style.load', () => {
+        try { globeMap.setProjection({ type: 'globe' }); } catch {}
+      });
+      globeMap.on('click', (e) => setGlobePin(e.lngLat.lat, e.lngLat.lng, 10));
+    }
+
+    $('#toggle-layer-btn').addEventListener('click', () => {
+      if (!globeMap) return;
+      isSatellite = !isSatellite;
+      globeMap.setLayoutProperty('sat-layer', 'visibility', isSatellite ? 'visible' : 'none');
+      globeMap.setLayoutProperty('osm-layer', 'visibility', isSatellite ? 'none' : 'visible');
+    });
+
+    $('#gps-btn').addEventListener('click', () => {
+      if (!navigator.geolocation) return;
+      $('#map-status').textContent = 'Locating via GPS…';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setGlobePin(pos.coords.latitude, pos.coords.longitude, 12),
+        () => { $('#map-status').textContent = 'GPS permission denied.'; }
+      );
+    });
+
+    $('#map-search-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const q = $('#map-search-input').value.trim();
+      if (!q) return;
+      $('#map-status').textContent = `Searching "${q}"…`;
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(q + ', India')}`);
+        const list = await res.json();
+        if (list.length) await setGlobePin(Number(list[0].lat), Number(list[0].lon), 11);
+        else $('#map-status').textContent = 'Location not found.';
+      } catch {
+        $('#map-status').textContent = 'Search unavailable offline.';
+      }
+    });
+
+    /* Top Corner Browse Live Portals Modal */
+    $('#open-browse-btn').addEventListener('click', () => { $('#browse-modal').hidden = false; browseSources(); });
+    $('#close-browse-btn').addEventListener('click', () => { $('#browse-modal').hidden = true; });
+    $('#browse-modal').addEventListener('click', (e) => { if (e.target === $('#browse-modal')) $('#browse-modal').hidden = true; });
+
+    async function browseSources() {
+      const q = $('#q').value;
+      const res = await fetch(`/api/sources?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      $('#browse').innerHTML = (data.sources || []).map((s) => {
+        const notices = (s.notices || []).slice(0, 3)
+          .map((n) => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener noreferrer">${esc(n.text)}</a></li>`)
+          .join('');
+        return `
+          <div class="live-site-card" style="margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
+              <strong>${esc(s.name)}</strong>
+              <span class="badge ${s.status === 'ok' ? 'live-ok' : 'live-err'}">${esc((s.status || 'pending').toUpperCase())}</span>
+            </div>
+            <p class="muted" style="margin:4px 0;"><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.url)}</a></p>
+            ${notices ? `<ul style="font-size:.85rem; padding-left:16px;">${notices}</ul>` : '<p class="muted">Not fetched yet or no notices found.</p>'}
+          </div>`;
+      }).join('') || '<p>No matching portals.</p>';
+    }
+    let browseTimer;
+    $('#q').addEventListener('input', () => { clearTimeout(browseTimer); browseTimer = setTimeout(browseSources, 250); });
+
+    $('#add-source-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const url = $('#new-source-url').value.trim();
+      const name = $('#new-source-name').value.trim();
+      if (!url) return;
+      const res = await fetch('/api/sources', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, name }),
+      });
+      if (res.ok) {
+        $('#new-source-url').value = '';
+        $('#new-source-name').value = '';
+        await Promise.all([browseSources(), loadLivePanel(false)]);
+      }
+    });
+
+    /* Audio Playback + Hands-Free Live Mode Loop */
+    let currentAudio = null;
+    let liveHandsFree = false;
+    const chatHistory = [];
+
+    function stopAllAudio() {
+      if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      $('#stop-audio-btn').hidden = true;
+    }
+
+    function playAudioResponse(text, lang = 'en-IN', audioBase64 = null, audioMimeType = 'audio/wav', onFinished = null) {
+      stopAllAudio();
+      if (!text && !audioBase64) { if (onFinished) onFinished(); return; }
+      $('#stop-audio-btn').hidden = false;
+      const done = () => { $('#stop-audio-btn').hidden = true; if (onFinished) onFinished(); };
+
+      if (audioBase64) {
+        const audio = new Audio(`data:${audioMimeType};base64,${audioBase64}`);
+        currentAudio = audio;
+        audio.onended = done;
+        audio.play().catch(() => {
+          if ('speechSynthesis' in window && text) {
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = lang;
+            utter.onend = done;
+            window.speechSynthesis.speak(utter);
+          } else { done(); }
+        });
+        return;
+      }
+
+      if ('speechSynthesis' in window && text) {
+        window.speechSynthesis.resume();
+        const utter = new SpeechSynthesisUtterance(text);
+        const voices = window.speechSynthesis.getVoices();
+        const match = voices.find((v) => v.lang.toLowerCase().startsWith(lang.split('-')[0].toLowerCase()));
+        if (match) utter.voice = match;
+        utter.lang = match ? match.lang : (voices[0]?.lang || 'en-US');
+        utter.rate = 0.96;
+        utter.onend = done;
+        utter.onerror = done;
+        window.speechSynthesis.speak(utter);
+      } else { done(); }
+    }
+    $('#stop-audio-btn').addEventListener('click', stopAllAudio);
+
+    function appendChatMessage(role, text, audioInfo = null, webSources = [], usedModel = '') {
+      const box = $('#chat-messages');
+      const div = document.createElement('div');
+      div.className = `msg ${role}`;
+      div.innerHTML = `<div>${esc(text)}</div>`;
+
+      if (role === 'bot' && webSources && webSources.length) {
+        const srcHtml = webSources.slice(0, 3)
+          .map((s) => `<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.name)}</a>`)
+          .join(' · ');
+        const srcDiv = document.createElement('div');
+        srcDiv.className = 'msg-sources';
+        srcDiv.innerHTML = `Live sources: ${srcHtml}`;
+        div.appendChild(srcDiv);
+      }
+
+      if (role === 'bot' && (audioInfo?.audioBase64 || text)) {
+        const meta = document.createElement('div');
+        meta.className = 'msg-meta';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'msg-play';
+        btn.textContent = audioInfo?.audioBase64 ? '▶ Play Audio' : '🔊 Speak';
+        btn.addEventListener('click', () => {
+          playAudioResponse(text, audioInfo?.lang || 'en-IN', audioInfo?.audioBase64 || null, audioInfo?.audioMimeType || 'audio/wav');
+        });
+        meta.appendChild(btn);
+        if (usedModel) {
+          const span = document.createElement('span');
+          span.textContent = usedModel;
+          meta.appendChild(span);
+        }
+        div.appendChild(meta);
+      }
+
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      chatHistory.push({ role: role === 'user' ? 'user' : 'assistant', text });
+    }
+
+    function getCurrentProfile() {
+      const f = new FormData($('#profile'));
+      return {
+        ownership: f.get('ownership') || '',
+        acres: f.get('acres') ? Number(f.get('acres')) : null,
+        state: f.get('state') || '',
+        district: f.get('district') || '',
+        crop: f.get('crop') || '',
+        irrigationType: f.get('irrigationType') || '',
+        age: f.get('age') ? Number(f.get('age')) : null,
+      };
+    }
+
+    function applyExtractedProfile(p) {
+      if (!p) return;
+      if (p.ownership) {
+        const own = document.querySelector(`input[name="ownership"][value="${CSS.escape(p.ownership)}"]`);
+        if (own) own.checked = true;
+      }
+      if (typeof p.acres === 'number') $('#acres').value = p.acres;
+      if (p.state) $('#state').value = p.state;
+      if (p.district) $('#district').value = p.district;
+      if (p.crop) $('#crop').value = p.crop;
+      if (p.irrigationType) $('#irrigationType').value = p.irrigationType;
+      if (p.age) $('#age').value = p.age;
+    }
+
+    function renderLiveSites(sites) {
+      const list = sites || [];
+      const onlineCount = list.filter((s) => s.status === 'ok').length;
+      $('#live-summary').textContent = `${onlineCount} of ${list.length} saved websites fetched live`;
+      $('#live-sites-grid').innerHTML = list.slice(0, 12).map((s) => {
+        const badge = s.status === 'ok'
+          ? '<span class="badge live-ok">LIVE</span>'
+          : '<span class="badge live-err">UNREACHABLE</span>';
+        const officialBadge = s.official ? '<span class="badge official">Official</span>' : '';
+        const notices = (s.notices || []).slice(0, 3)
+          .map((n) => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener noreferrer">${esc(n.text)}</a></li>`)
+          .join('');
+        const subLinks = (s.crawledLinks || []).slice(0, 2)
+          .map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.text)}</a>`)
+          .join(' · ');
+        const filesHtml = (s.files || []).slice(0, 2)
+          .map((f) => `<a href="${esc(f.url)}" target="_blank" rel="noopener noreferrer">📄 ${esc(f.name)}</a>`)
+          .join(' · ');
+        const secHtml = (s.sections || []).slice(0, 1)
+          .map((sec) => `<p class="muted" style="margin:4px 0; font-size:.8rem;"><strong>${esc(sec.heading)}:</strong> ${esc(sec.text.slice(0, 140))}…</p>`)
+          .join('');
+        return `
+          <div class="live-site-card">
+            <div style="display:flex; justify-content:space-between; gap:6px; align-items:center; flex-wrap:wrap;">
+              <strong>${esc(s.name)}</strong>
+              <div>${officialBadge} ${badge}</div>
+            </div>
+            <p class="muted" style="margin:4px 0; word-break:break-all;"><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.url)}</a></p>
+            ${secHtml}
+            ${notices ? `<ul style="font-size:.84rem; padding-left:16px;">${notices}</ul>` : '<p class="muted">No active notices extracted.</p>'}
+            ${filesHtml ? `<p class="muted" style="margin-top:6px; font-size:.78rem;">Files: ${filesHtml}</p>` : ''}
+            ${subLinks ? `<p class="muted" style="margin-top:4px; font-size:.78rem;">Crawled links: ${subLinks}</p>` : ''}
+          </div>`;
+      }).join('') || '<p class="muted">Click "Refresh live sites" to fetch official portals now.</p>';
+    }
+
+    async function loadLivePanel(force = false) {
+      try {
+        const res = force
+          ? await fetch('/api/live/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force: true, crawlSubpages: true }) })
+          : await fetch('/api/live/status');
+        const data = await res.json();
+        renderLiveSites(data.sites || []);
+      } catch {}
+    }
+    $('#refresh-live').addEventListener('click', () => loadLivePanel(true));
+
+    async function sendAssistantRequest({ audioBase64 = '', mimeType = 'audio/webm', transcript = '', interviewMode = false }) {
+      $('#voice-status').textContent = 'Searching live internet & official portals…';
+      const res = await fetch('/api/voice-assist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          audioBase64,
+          mimeType,
+          transcript,
+          language: $('#ui-lang').value,
+          currentProfile: getCurrentProfile(),
+          history: chatHistory.slice(-6),
+          speak: true,
+          interviewMode,
+          chatModel: $('#chat-model-select').value,
+          ttsModel: $('#tts-model-select').value,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Assistant request failed');
+
+      if (data.speechLang && I18N[data.speechLang]) applyLanguage(data.speechLang);
+      applyExtractedProfile(data.extractedProfile);
+      renderLiveSites(data.liveSites || []);
+
+      appendChatMessage(
+        'bot',
+        data.speechText,
+        {
+          audioBase64: data.audioBase64,
+          audioMimeType: data.audioMimeType || 'audio/wav',
+          lang: data.speechLang || 'en-IN',
+        },
+        data.webSources || [],
+        data.model || ''
+      );
+      $('#voice-status').textContent = '';
+
+      playAudioResponse(
+        data.speechText,
+        data.speechLang || 'en-IN',
+        data.audioBase64,
+        data.audioMimeType || 'audio/wav',
+        () => { if (liveHandsFree) startHandsFreeTurn(); }
+      );
+    }
+
+    $('#chat-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = $('#chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      appendChatMessage('user', text);
+      try { await sendAssistantRequest({ transcript: text }); }
+      catch (err) { appendChatMessage('bot', `Error: ${err.message}`); $('#voice-status').textContent = ''; }
+    });
+
+    $('#interview-btn').addEventListener('click', async () => {
+      appendChatMessage('user', '🎙️ Start voice interview');
+      await sendAssistantRequest({
+        transcript: 'Ask me one short friendly question to learn my farm details (state, district, land size, crop, or irrigation).',
+        interviewMode: true,
+      });
+    });
+
+    $('#reset-reask-btn').addEventListener('click', async () => {
+      $('#profile').reset();
+      $('#state').value = '';
+      $('#district').value = '';
+      $('#crop').value = '';
+      $('#irrigationType').value = '';
+      $('#age').value = '';
+      appendChatMessage('user', '🔄 Reset & re-ask my farm details');
+      await sendAssistantRequest({
+        transcript: 'I have reset my farm profile. Ask me the first question again to fill it.',
+        interviewMode: true,
+      });
+    });
+
+    let mediaRecorder = null;
+    let audioChunks = [];
+    $('#mic-btn').addEventListener('click', async () => {
+      const btn = $('#mic-btn');
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        btn.setAttribute('data-recording', 'false');
+        btn.textContent = (I18N[$('#ui-lang').value] || I18N['en-IN']).speakBtn;
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = (ev) => { if (ev.data.size > 0) audioChunks.push(ev.data); };
+        mediaRecorder.onstop = () => {
+          stream.getTracks().forEach((t) => t.stop());
+          const mimeType = mediaRecorder.mimeType || 'audio/webm';
+          const blob = new Blob(audioChunks, { type: mimeType });
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+            const base64 = String(reader.result || '').split(',')[1] || '';
+            appendChatMessage('user', '🎤 Voice message');
+            try { await sendAssistantRequest({ audioBase64: base64, mimeType }); }
+            catch (err) { appendChatMessage('bot', `Error: ${err.message}`); $('#voice-status').textContent = ''; }
+          };
+          reader.readAsDataURL(blob);
+        };
+        mediaRecorder.start();
+        btn.setAttribute('data-recording', 'true');
+        btn.textContent = '⏹ Stop & Send';
+        $('#voice-status').textContent = 'Listening…';
+      } catch { $('#voice-status').textContent = 'Microphone permission denied.'; }
+    });
+
+    let vadStream = null;
+    async function startHandsFreeTurn() {
+      if (!liveHandsFree) return;
+      try {
+        vadStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioCtx.createMediaStreamSource(vadStream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 512;
+        source.connect(analyser);
+
+        const chunks = [];
+        const rec = new MediaRecorder(vadStream);
+        rec.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+
+        let spoke = false;
+        let lastSound = Date.now();
+        const buf = new Uint8Array(analyser.frequencyBinCount);
+        $('#voice-status').textContent = '🔴 Live listening… speak anytime';
+
+        rec.onstop = () => {
+          vadStream.getTracks().forEach((t) => t.stop());
+          audioCtx.close();
+          if (!liveHandsFree || !spoke) return;
+          const mimeType = rec.mimeType || 'audio/webm';
+          const blob = new Blob(chunks, { type: mimeType });
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+            const base64 = String(reader.result || '').split(',')[1] || '';
+            appendChatMessage('user', '🔴 Live voice');
+            try { await sendAssistantRequest({ audioBase64: base64, mimeType }); }
+            catch (err) { appendChatMessage('bot', `Error: ${err.message}`); }
+          };
+          reader.readAsDataURL(blob);
+        };
+
+        rec.start();
+        const checkSilence = () => {
+          if (!liveHandsFree) { if (rec.state === 'recording') rec.stop(); return; }
+          analyser.getByteFrequencyData(buf);
+          const avg = buf.reduce((a, b) => a + b, 0) / buf.length;
+          if (avg > 14) { spoke = true; lastSound = Date.now(); }
+          if (spoke && Date.now() - lastSound > 1400) {
+            if (rec.state === 'recording') rec.stop();
+            return;
+          }
+          requestAnimationFrame(checkSilence);
+        };
+        checkSilence();
+      } catch {
+        liveHandsFree = false;
+        $('#live-mode-btn').setAttribute('data-active', 'false');
+        $('#live-mode-btn').textContent = '🔴 Live Hands-Free: OFF';
+        $('#voice-status').textContent = 'Microphone permission needed.';
+      }
+    }
+
+    $('#live-mode-btn').addEventListener('click', () => {
+      liveHandsFree = !liveHandsFree;
+      const btn = $('#live-mode-btn');
+      btn.setAttribute('data-active', String(liveHandsFree));
+      btn.textContent = liveHandsFree ? '🔴 Live Hands-Free: ON' : '🔴 Live Hands-Free: OFF';
+      if (liveHandsFree) { stopAllAudio(); startHandsFreeTurn(); }
+      else { if (vadStream) vadStream.getTracks().forEach((t) => t.stop()); $('#voice-status').textContent = ''; }
+    });
+
+    loadAiModels();
+    loadLivePanel(false);
+  </script>
+</body>
+</html>

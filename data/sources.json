@@ -1,0 +1,11 @@
+[
+  { "id": "pm-kisan", "name": "PM-KISAN", "url": "https://pmkisan.gov.in" },
+  { "id": "pmfby", "name": "PMFBY", "url": "https://pmfby.gov.in" },
+  { "id": "myscheme", "name": "myScheme", "url": "https://www.myscheme.gov.in" },
+  { "id": "soil-health-card", "name": "Soil Health Card", "url": "https://soilhealth.dac.gov.in" },
+  { "id": "mnre-kusum", "name": "PM-KUSUM (MNRE)", "url": "https://mnre.gov.in" },
+  { "id": "pgs-india", "name": "PGS-India Organic", "url": "https://pgsindia-ncof.gov.in" },
+  { "id": "krushak-odisha", "name": "Krushak Odisha", "url": "https://krushak.odisha.gov.in" },
+  { "id": "krishak-bandhu", "name": "Krishak Bandhu (WB)", "url": "https://krishakbandhu.wb.gov.in" },
+  { "id": "mahadbt-agri", "name": "MahaDBT Agriculture", "url": "https://mahadbt.maharashtra.gov.in" }
+]

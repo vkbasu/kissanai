@@ -1325,7 +1325,14 @@
         return;
       }
       window.speechSynthesis.resume();
-      const utter = new SpeechSynthesisUtterance(text);
+      const cleanText = text
+        .replace(/https?:\/\/\S+/g, '')
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/\*(.*?)\*/g, '$1')
+        .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+        .replace(/[#_~`•]/g, ' ')
+        .trim();
+      const utter = new SpeechSynthesisUtterance(cleanText);
       const voices = window.speechSynthesis.getVoices();
       const langPrefix = (lang || 'en-IN').split('-')[0].toLowerCase();
       const prefGender = $('#voice-gender-select')?.value || localStorage.getItem('SF_VOICE_GENDER') || 'female';
@@ -1402,11 +1409,27 @@
     }
     $('#stop-audio-btn').addEventListener('click', stopAllAudio);
 
+    function formatChatMarkdown(raw) {
+      if (!raw) return '';
+      let s = esc(raw);
+      s = s.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      s = s.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      s = s.replace(/^### (.*$)/gim, '<h4 style="margin:8px 0 4px; color:#2d6a4f; font-size:1rem;">$1</h4>');
+      s = s.replace(/^## (.*$)/gim, '<h3 style="margin:10px 0 6px; color:#1b4332; font-size:1.05rem;">$1</h3>');
+      s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#2d6a4f; text-decoration:underline; font-weight:600;">$1</a>');
+      s = s.replace(/(^|[\s(])(https?:\/\/[^\s\)<>]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#2d6a4f; text-decoration:underline;">$2</a>');
+      s = s.replace(/^\s*[-•*]\s+(.*$)/gim, '<li style="margin-left:14px; margin-bottom:4px;">$1</li>');
+      s = s.replace(/((?:<li[\s\S]*?<\/li>\s*)+)/g, '<ul style="margin:6px 0; padding-left:10px;">$1</ul>');
+      s = s.replace(/\n\n/g, '<div style="margin-bottom:8px;"></div>');
+      s = s.replace(/\n/g, '<br>');
+      return s;
+    }
+
     function appendChatMessage(role, text, audioInfo = null, webSources = [], usedModel = '') {
       const box = $('#chat-messages');
       const div = document.createElement('div');
       div.className = `msg ${role}`;
-      div.innerHTML = `<div>${esc(text)}</div>`;
+      div.innerHTML = `<div class="msg-content">${formatChatMarkdown(text)}</div>`;
 
       if (role === 'bot' && webSources && (Array.isArray(webSources) ? webSources.length : 0)) {
         const srcHtml = (Array.isArray(webSources) ? webSources : []).slice(0, 3)
@@ -1545,18 +1568,53 @@
       const cur = getCurrentProfile();
       const selectedLang = $('#ui-lang').value || 'en-IN';
       const sitesList = normalizeSitesArray(staticSitesCache);
-      const sampleSites = sitesList.slice(0, 5).map((s) => ({
+
+      // Filter and prioritize MyScheme, Central schemes, and State-specific portals
+      const stateKeywords = {
+        'kn-IN': ['karnataka', 'fruits', 'raitha'],
+        'mr-IN': ['maharashtra', 'mahadbt', 'shetkari'],
+        'or-IN': ['odisha', 'krushak'],
+        'bn-IN': ['bengal', 'krishak bandhu'],
+        'te-IN': ['telangana', 'andhra', 'rythu'],
+        'ta-IN': ['tamil', 'uzhavan'],
+        'pa-IN': ['punjab'],
+        'hi-IN': ['uttar pradesh', 'bihar', 'rajasthan', 'madhya pradesh', 'kisan']
+      };
+      const relevantStateHints = stateKeywords[selectedLang] || [];
+      const userState = (cur.state || '').toLowerCase();
+
+      const prioritizedSites = sitesList.filter((s) => {
+        const sName = (s.name || '').toLowerCase();
+        const sId = (s.id || '').toLowerCase();
+        if (sId === 'myscheme' || sId === 'pm-kisan' || sId === 'pmfby' || sId === 'mnre-kusum') return true;
+        if (userState && (sName.includes(userState) || sId.includes(userState))) return true;
+        if (relevantStateHints.some((h) => sName.includes(h) || sId.includes(h))) return true;
+        return false;
+      });
+      const selectedPortals = (prioritizedSites.length ? prioritizedSites : sitesList.slice(0, 7)).map((s) => ({
         name: s.name,
         url: s.url,
-        notices: (s.notices || []).slice(0, 3).map((n) => n.text),
         sections: (s.sections || []).slice(0, 2).map((sec) => `${sec.heading}: ${sec.text}`),
+        notices: (s.notices || []).slice(0, 3).map((n) => n.text),
       }));
 
-      const prompt = `You are a warm, knowledgeable Indian agricultural advisor.
-Do TWO things in ONE JSON response:
-1. Extract or update any farm details from the farmer's latest message into \`profile\` (ownership, acres, state, district, crop, irrigationType, age, language).
-2. Answer the farmer's query using known Indian government schemes (PM-KISAN, PMFBY, Soil Health Card, KCC, state subsidies) and the official portal context below. Write a dynamic, helpful, conversational \`reply\` (3 to 4 plain-text sentences, no markdown or asterisks) strictly in language '${selectedLang}'.
-If interviewMode is true, ask one short follow-up question to collect missing farm details.
+      const prompt = `You are a warm, highly knowledgeable Indian agricultural scheme advisor (Smart Farmer AI).
+The farmer needs direct, actionable, real facts—NOT vague answers or generic deflections.
+
+CRITICAL RULES:
+1. NEVER deflect by just saying "check the portal", "visit the website", or "check for more info".
+2. ALWAYS provide DIRECT, CONCRETE, SUBSTANTIVE details:
+   - Exact subsidy amounts in ₹ and financial assistance.
+   - Clear eligibility rules (land ownership, small/marginal farmer, Aadhaar bank seeding, eKYC status).
+   - Required documents (Aadhaar, Land ROR/7/12/Pahani/Pattadar passbook, Bank Passbook, Mobile OTP).
+   - Step-by-step application instructions (Online portal link, nearest Gram One / CSC / MeeSeva center).
+3. Arrange your response in a NEAT, BEAUTIFULLY FORMATTED layout with clear emojis and bullet points:
+   • 💰 Subsidy & Financial Assistance
+   • 📋 Eligibility Criteria
+   • 📝 Documents & Application Steps
+   • 🔗 Official Government Portals & Helplines
+4. STRICT LANGUAGE REQUIREMENT: Write the entire reply in language '${selectedLang}'. Translate all section headings, numbers, and explanations naturally into '${selectedLang}' (e.g. native Kannada script if kn-IN, Hindi in Devanagari if hi-IN, Tamil, Telugu, Marathi, Bengali, Odia, Punjabi, or English).
+5. If interviewMode is true, add one short, courteous follow-up question at the end to help identify more eligible schemes.
 
 Return ONLY valid JSON with this exact shape:
 {"profile": {"ownership": "", "acres": null, "state": "", "district": "", "crop": "", "irrigationType": "", "age": null, "language": "${selectedLang}"}, "reply": "..."}
@@ -1564,8 +1622,8 @@ Return ONLY valid JSON with this exact shape:
 Interview mode: ${interviewMode}
 Current profile: ${JSON.stringify(cur)}
 Recent chat: ${JSON.stringify(chatHistory.slice(-4))}
-Official Portal Context:
-${JSON.stringify(sampleSites)}`;
+Official Government Portals Context (MyScheme & States):
+${JSON.stringify(selectedPortals)}`;
 
       const parts = [{ text: prompt }];
       if (audioBase64) {
@@ -1583,61 +1641,91 @@ ${JSON.stringify(sampleSites)}`;
       const modelsToTry = [
         selectedModel,
         'gemini-flash-lite-latest',
-        'gemini-2.5-flash-lite',
         'gemini-3.1-flash-lite',
+        'gemini-3.5-flash-lite',
         'gemini-flash-latest',
-        'gemini-2.5-flash',
-      ].filter((v, i, a) => a.indexOf(v) === i && !v.includes('local') && !v.includes('tts'));
+      ].filter((v, i, a) => a.indexOf(v) === i && !v.includes('local') && !v.includes('tts') && !v.includes('2.5') && !v.includes('2.0') && !v.includes('1.5'));
 
       let lastError = null;
       for (const model of modelsToTry) {
-        try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-          const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+        // Attempt search-grounded browsing first, fallback to portal-grounded JSON direct
+        const tryConfigs = [
+          { useSearch: true, jsonMode: false },
+          { useSearch: false, jsonMode: true },
+        ];
+
+        for (const cfg of tryConfigs) {
+          try {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            const bodyObj = {
               contents: [{ role: 'user', parts }],
               generationConfig: {
-                temperature: 0.45,
-                responseMimeType: 'application/json',
+                temperature: 0.35,
+                maxOutputTokens: 2048,
               },
-            }),
-          });
-
-          if (!res.ok) {
-            const errData = await res.json().catch(() => ({}));
-            throw new Error(errData.error?.message || `HTTP ${res.status}`);
-          }
-
-          const resData = await res.json();
-          const rawText = resData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          let parsed = { profile: {}, reply: rawText };
-          try {
-            parsed = JSON.parse(rawText);
-          } catch {
-            const match = rawText.match(/\{[\s\S]*\}/);
-            if (match) {
-              try { parsed = JSON.parse(match[0]); } catch {}
+            };
+            if (cfg.jsonMode) {
+              bodyObj.generationConfig.responseMimeType = 'application/json';
             }
-          }
+            if (cfg.useSearch) {
+              bodyObj.tools = [{ googleSearch: {} }];
+            }
 
-          return {
-            speechText: parsed.reply || rawText || 'Information retrieved.',
-            speechLang: parsed.profile?.language || selectedLang,
-            extractedProfile: parsed.profile || {},
-            audioBase64: null,
-            audioMimeType: null,
-            model: `${model} (Direct Web)`,
-            webSources: [
-              { url: 'https://pmkisan.gov.in', name: 'PM-KISAN Portal' },
-              { url: 'https://pmfby.gov.in', name: 'PMFBY Crop Insurance' },
-              { url: 'https://agricoop.gov.in', name: 'Ministry of Agriculture' },
-            ],
-            liveSites: normalizeSitesArray(staticSitesCache),
-          };
-        } catch (err) {
-          lastError = err;
+            const res = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(bodyObj),
+            });
+
+            if (!res.ok) {
+              const errData = await res.json().catch(() => ({}));
+              throw new Error(errData.error?.message || `HTTP ${res.status}`);
+            }
+
+            const resData = await res.json();
+            const cand = resData.candidates?.[0];
+            const rawText = cand?.content?.parts?.[0]?.text || '';
+            let parsed = { profile: {}, reply: rawText };
+            try {
+              parsed = JSON.parse(rawText);
+            } catch {
+              const match = rawText.match(/\{[\s\S]*\}/);
+              if (match) {
+                try { parsed = JSON.parse(match[0]); } catch {}
+              }
+            }
+
+            // Extract Google Search Grounding links if available
+            const webSources = [];
+            const grounding = cand?.groundingMetadata;
+            if (grounding && Array.isArray(grounding.groundingChunks)) {
+              grounding.groundingChunks.forEach((chunk) => {
+                if (chunk.web && chunk.web.uri) {
+                  webSources.push({ url: chunk.web.uri, name: chunk.web.title || chunk.web.uri });
+                }
+              });
+            }
+            if (webSources.length === 0) {
+              webSources.push(
+                { url: 'https://www.myscheme.gov.in', name: 'myScheme (Official GoI)' },
+                { url: 'https://pmkisan.gov.in', name: 'PM-KISAN' },
+                { url: 'https://pmfby.gov.in', name: 'PMFBY Crop Insurance' }
+              );
+            }
+
+            return {
+              speechText: parsed.reply || rawText || 'Information retrieved.',
+              speechLang: parsed.profile?.language || selectedLang,
+              extractedProfile: parsed.profile || {},
+              audioBase64: null,
+              audioMimeType: null,
+              model: `${model} ${grounding?.groundingChunks?.length ? '(Grounded Search)' : '(Direct Web)'}`,
+              webSources,
+              liveSites: normalizeSitesArray(staticSitesCache),
+            };
+          } catch (err) {
+            lastError = err;
+          }
         }
       }
       throw lastError || new Error('Direct Gemini API request failed.');

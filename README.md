@@ -5,6 +5,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Gemini AI](https://img.shields.io/badge/Google%20Gemini-Flash%20Lite-4285F4.svg?logo=google&logoColor=white)](https://aistudio.google.com/)
 [![Docker Ready](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)](docker-compose.yml)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live%20Preview-blue.svg?logo=github)](https://<username>.github.io/<repo-name>/)
 [![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen.svg)](tests/)
 
 A modern, voice-first web application that helps Indian farmers find central and state government agricultural schemes they may qualify for. It combines multimodal generative AI (Google Gemini via Google AI Studio free tier), deterministic eligibility evaluation, real-time portal web scraping, and multilingual voice synthesis.
@@ -18,9 +19,11 @@ A modern, voice-first web application that helps Indian farmers find central and
 - [Overview](#overview)
 - [Key Features](#key-features)
 - [Architecture Summary](#architecture-summary)
+- [GitHub Pages Live Preview](#github-pages-live-preview)
 - [Quick Start](#quick-start)
   - [Option A: 1-Command Docker Setup (Recommended)](#option-a-1-command-docker-setup-recommended)
   - [Option B: Local Python Environment](#option-b-local-python-environment)
+  - [Option C: Instant GitHub Pages Deployment (Zero-Install / In-Browser AI)](#option-c-instant-github-pages-deployment-zero-install--in-browser-ai)
 - [Environment Configuration](#environment-configuration)
 - [Usage Guide](#usage-guide)
   - [Using the Web Interface](#using-the-web-interface)
@@ -64,7 +67,7 @@ Navigating government agricultural subsidies, insurance schemes, and welfare ben
 
 ```mermaid
 flowchart TD
-    subgraph Client ["Client Browser (public/index.html)"]
+    subgraph Client ["Client Browser (public/index.html / root index.html)"]
         UI[Farmer Web Dashboard]
         MIC[Web Audio Recorder / Mic]
         SPEAKER[Audio Player / Web Speech API]
@@ -99,8 +102,33 @@ flowchart TD
 - **`app/voice_ai.py`**: Audio preprocessing, Gemini multimodal prompting, and eligibility rule evaluations.
 - **`app/live_fetcher.py`**: Asynchronous HTTP crawler with SHA-256 change detection and PDF circular extraction.
 - **`ai_service/`**: Voice specification catalog, model metadata synchronization, and local TTS engines.
-- **`public/`**: Clean, accessible HTML/CSS/JavaScript web interface.
+- **`public/index.html`**: Master single-page farmer dashboard served by FastAPI.
+- **`index.html` & `index/index.html`**: Root and directory-level landing page mirrors enabling direct zero-build GitHub Pages hosting.
 - **`data/`**: Scheme source definitions (`sources.json`) and active cached snapshot data (`live_cache.json`).
+
+---
+
+## 🌐 GitHub Pages Live Preview
+
+The repository is pre-configured for automated **GitHub Pages** deployment at:
+```text
+https://<username>.github.io/<repo-name>/
+```
+
+### Enabling GitHub Pages in Repository Settings
+1. Navigate to your repository on GitHub.
+2. Click **Settings** (tab at the top) > **Pages** (under the "Code and automation" left sidebar).
+3. Under **Build and deployment**:
+   - **Recommended (Automated GitHub Actions):** Set **Source** to **GitHub Actions**. The automated workflow [`.github/workflows/pages.yml`](.github/workflows/pages.yml) will deploy the site on every push to `main`.
+   - **Alternative (Deploy from Branch):** Set **Source** to **Deploy from a branch**, select the `main` branch, and select `/ (root)` folder. Click **Save**.
+
+### Root `index.html` & `index/` Architecture
+- The repository provides `index.html` directly at the root and mirrors it in `index/index.html` (matching `public/index.html`).
+- This layout allows GitHub Pages to serve the web application directly upon cloning or uploading files as-is, without requiring Node.js build steps or static site generators.
+- **Client-Side Gemini AI & Speech:** When hosted on GitHub Pages (`*.github.io` without a Python backend), the application automatically activates static mode:
+  - Users can click **🔑 Key** (or the prompt banner) to enter their free Google AI Studio Gemini API key (saved locally in browser `localStorage`).
+  - The browser calls Google Gemini REST API directly for conversational scheme matching, extracts farmer profiles, speaks responses aloud via native `window.speechSynthesis`, and loads cached portal data from `data/live_cache.json`.
+  - For server-side background portal scraping and local neural TTS, run the Python or Docker backend.
 
 ---
 
@@ -193,6 +221,17 @@ Requires **Python 3.10+** and `pip`.
 
 ---
 
+### Option C: Instant GitHub Pages Deployment (Zero-Install / In-Browser AI)
+
+For immediate usage directly from the web without running a local server:
+1. Fork or push this repository to GitHub.
+2. Enable GitHub Pages under **Settings** > **Pages** as described in [GitHub Pages Live Preview](#github-pages-live-preview).
+3. Access your published URL at `https://<username>.github.io/<repo-name>/`.
+4. Click **🔑 Key** in the chat header to enter your free Google AI Studio Gemini API key (saved in your browser's `localStorage`).
+5. Talk or type to search schemes—Gemini AI and browser voice synthesis work directly in your browser.
+
+---
+
 ## Environment Configuration
 
 Configuration variables are managed through environment variables or the `env/.env` file:
@@ -260,7 +299,8 @@ smart-farmer-scheme-assistant-python/
 │   │   ├── bug_report.md
 │   │   └── feature_request.md
 │   └── workflows/
-│       └── ci.yml
+│       ├── ci.yml             # Automated unit tests matrix
+│       └── pages.yml          # GitHub Pages automated deployment
 ├── ai_service/
 │   ├── config.py              # Model spec loading and selection
 │   ├── local_tts.py           # Offline TTS fallback implementations
@@ -280,13 +320,18 @@ smart-farmer-scheme-assistant-python/
 ├── env/
 │   ├── .env.example           # Environment template
 │   └── .env                   # Local secrets (gitignored)
+├── index/
+│   └── index.html             # Subdirectory mirror for GitHub uploads
 ├── public/
-│   └── index.html             # Single-page web dashboard
+│   └── index.html             # FastAPI master web dashboard
 ├── tests/
 │   └── test_app.py            # Comprehensive test suite
+├── .dockerignore              # Docker build exclusions
+├── .gitignore                 # Git secret and cache exclusions
 ├── CONTRIBUTING.md            # Guidelines for open-source contributors
-├── Dockerfile                 # Container image specification
+├── Dockerfile                 # Multi-stage production container build
 ├── docker-compose.yml         # 1-command container orchestration
+├── index.html                 # Root landing page for GitHub Pages
 ├── LICENSE                    # MIT License
 ├── pyproject.toml             # Package metadata and dependencies
 ├── README.md                  # Project documentation (this file)

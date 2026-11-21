@@ -344,7 +344,10 @@
         </div>
         <div class="chat-subbar">
           <span id="voice-ai-badge">Checking AI…</span>
-          <button type="button" class="secondary" id="interview-btn" style="padding:3px 9px; font-size:.75rem; color:#fff; border-color:rgba(255,255,255,0.4);" data-i18n="askMeBtn">🎙️ AI Ask Me</button>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button type="button" class="secondary" id="api-key-btn" style="padding:3px 8px; font-size:.75rem; color:#fff; border-color:rgba(255,255,255,0.4); background:rgba(255,255,255,0.12);" title="Configure Gemini API key for GitHub Pages static preview">🔑 Key</button>
+            <button type="button" class="secondary" id="interview-btn" style="padding:3px 9px; font-size:.75rem; color:#fff; border-color:rgba(255,255,255,0.4);" data-i18n="askMeBtn">🎙️ AI Ask Me</button>
+          </div>
         </div>
       </div>
 
@@ -395,6 +398,27 @@
       </div>
     </div>
   </div>
+
+  <!-- DIRECT GEMINI API KEY MODAL (GITHUB PAGES STATIC PREVIEW) -->
+  <dialog id="api-key-modal" style="border:1px solid var(--rule); border-radius:10px; padding:22px; max-width:440px; width:92%; box-shadow:0 12px 32px rgba(0,0,0,0.25); font-family:inherit; background:var(--paper); margin:auto;">
+    <form method="dialog" id="api-key-form" style="display:flex; flex-direction:column; gap:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0; font-size:1.15rem; color:var(--leaf);">🔑 Google AI Studio API Key</h3>
+        <button type="button" id="close-api-key-modal" style="background:none; border:none; font-size:1.4rem; cursor:pointer; line-height:1; color:var(--muted);">&times;</button>
+      </div>
+      <p style="font-size:0.86rem; color:var(--muted); margin:0;">
+        For direct access on GitHub Pages without running a Python backend, enter your free Gemini API key. Stored only in your browser's <code>localStorage</code> and never sent to any intermediary server.
+      </p>
+      <input type="password" id="user-gemini-key" placeholder="AIzaSy..." style="width:100%; padding:9px 10px; font-size:0.92rem; border:1px solid var(--rule); border-radius:6px; font-family:monospace; box-sizing:border-box;" autocomplete="off" />
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="font-size:0.82rem; color:var(--leaf-2); text-decoration:underline;">Get a free API key &rarr;</a>
+        <div style="display:flex; gap:6px;">
+          <button type="button" id="clear-api-key-btn" style="padding:6px 12px; font-size:0.82rem; background:#e2e8f0; border:1px solid #cbd5e1; border-radius:4px; cursor:pointer;">Clear</button>
+          <button type="submit" id="save-api-key-btn" style="padding:6px 14px; font-size:0.82rem; background:var(--leaf); color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:600;">Save Key</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
 
   <script>
     const $ = (sel) => document.querySelector(sel);
@@ -488,7 +512,104 @@
     }
     $('#ui-lang').addEventListener('change', (e) => applyLanguage(e.target.value));
 
-    /* AI Service Model Selector & Live Sync */
+    /* AI Service Model Selector & Live Sync (Local API + GitHub Pages Static Fallback) */
+    let isStaticHosting = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+    let staticSitesCache = null;
+    let staticNoticeShown = false;
+
+    function getStoredGeminiKey() {
+      return (localStorage.getItem('GEMINI_API_KEY') || localStorage.getItem('gemini_api_key') || '').trim();
+    }
+
+    function setStoredGeminiKey(key) {
+      if (key) {
+        localStorage.setItem('GEMINI_API_KEY', key);
+      } else {
+        localStorage.removeItem('GEMINI_API_KEY');
+        localStorage.removeItem('gemini_api_key');
+      }
+      updateStaticBadge();
+    }
+
+    function showApiKeyModal(msg = '') {
+      const modal = $('#api-key-modal');
+      $('#user-gemini-key').value = getStoredGeminiKey();
+      if (typeof modal.showModal === 'function') {
+        modal.showModal();
+      } else {
+        modal.style.display = 'block';
+      }
+    }
+
+    function hideApiKeyModal() {
+      const modal = $('#api-key-modal');
+      if (typeof modal.close === 'function') {
+        modal.close();
+      } else {
+        modal.style.display = 'none';
+      }
+    }
+
+    function updateStaticBadge() {
+      const key = getStoredGeminiKey();
+      const badge = $('#voice-ai-badge');
+      if (!badge) return;
+      if (isStaticHosting) {
+        if (key) {
+          badge.textContent = 'GitHub Pages · Gemini Ready';
+          badge.title = 'Gemini API key is configured in browser. Click to change.';
+        } else {
+          badge.textContent = 'GitHub Pages · Click to set API Key';
+          badge.title = 'Click to enter your Gemini API key for static preview';
+          showStaticWelcomeNotice();
+        }
+        badge.style.cursor = 'pointer';
+      }
+    }
+
+    function showStaticWelcomeNotice() {
+      if (staticNoticeShown || getStoredGeminiKey() || !isStaticHosting) return;
+      staticNoticeShown = true;
+      const notice = document.createElement('div');
+      notice.id = 'static-key-banner';
+      notice.className = 'static-key-banner';
+      notice.style.cssText = 'background: #fff; border: 1px solid var(--rule); border-left: 4px solid var(--focus); border-radius: 6px; padding: 12px 14px; margin-bottom: 12px; font-size: 0.88rem;';
+      notice.innerHTML = `
+        <strong>🌐 GitHub Pages Static Preview</strong>
+        <p style="margin:4px 0 8px 0; color:var(--muted);">To interact with the live AI assistant directly from GitHub Pages without a local server, provide your free Google AI Studio Gemini API key.</p>
+        <button type="button" id="banner-api-key-btn" style="padding:5px 12px; font-size:0.84rem; background:var(--leaf); color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:600;">🔑 Enter Gemini API Key</button>
+      `;
+      const container = $('#chat-messages');
+      if (container) {
+        container.insertBefore(notice, container.firstChild.nextSibling);
+        $('#banner-api-key-btn')?.addEventListener('click', () => showApiKeyModal());
+      }
+    }
+
+    $('#api-key-btn')?.addEventListener('click', () => showApiKeyModal());
+    $('#voice-ai-badge')?.addEventListener('click', () => {
+      if (isStaticHosting) showApiKeyModal();
+    });
+    $('#close-api-key-modal')?.addEventListener('click', hideApiKeyModal);
+    $('#clear-api-key-btn')?.addEventListener('click', () => {
+      setStoredGeminiKey('');
+      $('#user-gemini-key').value = '';
+      hideApiKeyModal();
+      appendChatMessage('bot', 'Gemini API key cleared from browser storage.');
+    });
+    $('#api-key-form')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const key = $('#user-gemini-key').value.trim();
+      if (!key) {
+        alert('Please enter a valid Google AI Studio API key.');
+        return;
+      }
+      setStoredGeminiKey(key);
+      hideApiKeyModal();
+      $('#static-key-banner')?.remove();
+      appendChatMessage('bot', '✅ Gemini API key saved in browser storage. You can now chat and receive voice advice directly on GitHub Pages!');
+    });
+
     function renderModelDropdowns(specs) {
       const models = specs.availableModels || [];
       const active = specs.active || {};
@@ -510,23 +631,39 @@
           fetch('/api/voice-status'),
           fetch('/api/ai/models'),
         ]);
+        if (!statusRes.ok || !modelsRes.ok) throw new Error('Static host');
         const statusData = await statusRes.json();
         const specs = await modelsRes.json();
         renderModelDropdowns(specs);
         $('#voice-ai-badge').textContent = statusData.aiConfigured
           ? `${(specs.availableModels || []).length} free models ready`
           : 'Add GEMINI_API_KEY in env/.env';
-      } catch {}
+      } catch {
+        isStaticHosting = true;
+        renderModelDropdowns({
+          active: { chatModel: 'gemini-2.5-flash-lite', ttsModel: 'browser-speech-synthesis' },
+          availableModels: [
+            { id: 'gemini-2.5-flash-lite', displayName: 'Gemini 2.5 Flash-Lite (Web)', category: 'chat' },
+            { id: 'gemini-2.0-flash', displayName: 'Gemini 2.0 Flash (Web)', category: 'chat' },
+            { id: 'gemini-1.5-flash', displayName: 'Gemini 1.5 Flash (Web)', category: 'chat' },
+            { id: 'browser-speech-synthesis', displayName: 'Web SpeechSynthesis', category: 'tts' },
+          ]
+        });
+        updateStaticBadge();
+      }
     }
 
     async function saveSelectedModels() {
+      if (isStaticHosting) return;
       const chatModel = $('#chat-model-select').value;
       const ttsModel = $('#tts-model-select').value;
-      await fetch('/api/ai/models/select', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatModel, ttsModel }),
-      });
+      try {
+        await fetch('/api/ai/models/select', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chatModel, ttsModel }),
+        });
+      } catch {}
     }
     $('#chat-model-select').addEventListener('change', saveSelectedModels);
     $('#tts-model-select').addEventListener('change', saveSelectedModels);
@@ -536,11 +673,37 @@
       btn.disabled = true;
       btn.textContent = 'Syncing…';
       try {
-        const res = await fetch('/api/ai/models/sync', { method: 'POST' });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Sync failed');
-        renderModelDropdowns(data);
-        $('#voice-ai-badge').textContent = `${(data.availableModels || []).length} free models synced`;
+        if (isStaticHosting) {
+          const key = getStoredGeminiKey();
+          if (!key) {
+            showApiKeyModal();
+            throw new Error('Please set Gemini API key first');
+          }
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error?.message || 'Sync failed');
+          const geminiModels = (data.models || [])
+            .filter((m) => (m.supportedGenerationMethods || []).includes('generateContent') && !m.name.includes('embedding'))
+            .map((m) => ({
+              id: m.name.replace(/^models\//, ''),
+              displayName: m.displayName || m.name.replace(/^models\//, ''),
+              category: 'chat'
+            }));
+          renderModelDropdowns({
+            active: { chatModel: geminiModels[0]?.id || 'gemini-2.5-flash-lite', ttsModel: 'browser-speech-synthesis' },
+            availableModels: [
+              ...geminiModels,
+              { id: 'browser-speech-synthesis', displayName: 'Web SpeechSynthesis', category: 'tts' }
+            ]
+          });
+          $('#voice-ai-badge').textContent = `GitHub Pages · ${geminiModels.length} models ready`;
+        } else {
+          const res = await fetch('/api/ai/models/sync', { method: 'POST' });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Sync failed');
+          renderModelDropdowns(data);
+          $('#voice-ai-badge').textContent = `${(data.availableModels || []).length} free models synced`;
+        }
       } catch (err) {
         $('#voice-status').textContent = err.message;
       } finally {
@@ -674,10 +837,26 @@
     $('#browse-modal').addEventListener('click', (e) => { if (e.target === $('#browse-modal')) $('#browse-modal').hidden = true; });
 
     async function browseSources() {
-      const q = $('#q').value;
-      const res = await fetch(`/api/sources?q=${encodeURIComponent(q)}`);
-      const data = await res.json();
-      $('#browse').innerHTML = (data.sources || []).map((s) => {
+      const q = ($('#q').value || '').trim().toLowerCase();
+      let list = [];
+      try {
+        const res = await fetch(`/api/sources?q=${encodeURIComponent(q)}`);
+        if (res.ok) {
+          const data = await res.json();
+          list = data.sources || [];
+        } else {
+          throw new Error('Static host');
+        }
+      } catch {
+        if (!staticSitesCache) {
+          try {
+            const sRes = await fetch('data/live_cache.json');
+            if (sRes.ok) staticSitesCache = await sRes.json();
+          } catch {}
+        }
+        list = (staticSitesCache || []).filter((s) => !q || (s.name || '').toLowerCase().includes(q));
+      }
+      $('#browse').innerHTML = list.map((s) => {
         const notices = (s.notices || []).slice(0, 3)
           .map((n) => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener noreferrer">${esc(n.text)}</a></li>`)
           .join('');
@@ -867,36 +1046,180 @@
         const res = force
           ? await fetch('/api/live/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ force: true, crawlSubpages: true }) })
           : await fetch('/api/live/status');
+        if (!res.ok) throw new Error('Static host');
         const data = await res.json();
         renderLiveSites(data.sites || []);
-      } catch {}
+      } catch {
+        try {
+          const staticRes = await fetch('data/live_cache.json');
+          if (staticRes.ok) {
+            const staticData = await staticRes.json();
+            staticSitesCache = staticData;
+            renderLiveSites(staticData || []);
+          }
+        } catch {}
+      }
     }
     $('#refresh-live').addEventListener('click', () => loadLivePanel(true));
 
+    async function callGeminiStaticDirect({ audioBase64 = '', mimeType = 'audio/webm', transcript = '', interviewMode = false }) {
+      const apiKey = getStoredGeminiKey();
+      if (!apiKey) {
+        showApiKeyModal();
+        throw new Error('Please enter your free Google AI Studio API key to chat directly on GitHub Pages.');
+      }
+
+      $('#voice-status').textContent = 'Consulting Gemini AI directly…';
+
+      if (!staticSitesCache) {
+        try {
+          const sRes = await fetch('data/live_cache.json');
+          if (sRes.ok) staticSitesCache = await sRes.json();
+        } catch {}
+      }
+
+      const cur = getCurrentProfile();
+      const selectedLang = $('#ui-lang').value || 'en-IN';
+      const sampleSites = (staticSitesCache || []).slice(0, 5).map((s) => ({
+        name: s.name,
+        url: s.url,
+        notices: (s.notices || []).slice(0, 3).map((n) => n.text),
+        sections: (s.sections || []).slice(0, 2).map((sec) => `${sec.heading}: ${sec.text}`),
+      }));
+
+      const prompt = `You are a warm, knowledgeable Indian agricultural advisor.
+Do TWO things in ONE JSON response:
+1. Extract or update any farm details from the farmer's latest message into \`profile\` (ownership, acres, state, district, crop, irrigationType, age, language).
+2. Answer the farmer's query using known Indian government schemes (PM-KISAN, PMFBY, Soil Health Card, KCC, state subsidies) and the official portal context below. Write a dynamic, helpful, conversational \`reply\` (3 to 4 plain-text sentences, no markdown or asterisks) strictly in language '${selectedLang}'.
+If interviewMode is true, ask one short follow-up question to collect missing farm details.
+
+Return ONLY valid JSON with this exact shape:
+{"profile": {"ownership": "", "acres": null, "state": "", "district": "", "crop": "", "irrigationType": "", "age": null, "language": "${selectedLang}"}, "reply": "..."}
+
+Interview mode: ${interviewMode}
+Current profile: ${JSON.stringify(cur)}
+Recent chat: ${JSON.stringify(chatHistory.slice(-4))}
+Official Portal Context:
+${JSON.stringify(sampleSites)}`;
+
+      const parts = [{ text: prompt }];
+      if (audioBase64) {
+        parts.push({
+          inlineData: {
+            mimeType: mimeType || 'audio/webm',
+            data: audioBase64,
+          },
+        });
+      } else if (transcript) {
+        parts.push({ text: `Farmer message: ${transcript}` });
+      }
+
+      const modelsToTry = [
+        $('#chat-model-select').value || 'gemini-2.5-flash-lite',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
+      ].filter((v, i, a) => a.indexOf(v) === i && !v.includes('local') && !v.includes('tts'));
+
+      let lastError = null;
+      for (const model of modelsToTry) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ role: 'user', parts }],
+              generationConfig: {
+                temperature: 0.45,
+                responseMimeType: 'application/json',
+              },
+            }),
+          });
+
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error?.message || `HTTP ${res.status}`);
+          }
+
+          const resData = await res.json();
+          const rawText = resData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          let parsed = { profile: {}, reply: rawText };
+          try {
+            parsed = JSON.parse(rawText);
+          } catch {
+            const match = rawText.match(/\{[\s\S]*\}/);
+            if (match) {
+              try { parsed = JSON.parse(match[0]); } catch {}
+            }
+          }
+
+          return {
+            speechText: parsed.reply || rawText || 'Information retrieved.',
+            speechLang: parsed.profile?.language || selectedLang,
+            extractedProfile: parsed.profile || {},
+            audioBase64: null,
+            audioMimeType: null,
+            model: `${model} (Direct Web)`,
+            webSources: [
+              { uri: 'https://pmkisan.gov.in', title: 'PM-KISAN Portal' },
+              { uri: 'https://pmfby.gov.in', title: 'PMFBY Crop Insurance' },
+              { uri: 'https://agricoop.gov.in', title: 'Ministry of Agriculture' },
+            ],
+            liveSites: staticSitesCache || [],
+          };
+        } catch (err) {
+          lastError = err;
+        }
+      }
+      throw lastError || new Error('Direct Gemini API request failed.');
+    }
+
     async function sendAssistantRequest({ audioBase64 = '', mimeType = 'audio/webm', transcript = '', interviewMode = false }) {
       $('#voice-status').textContent = 'Searching live internet & official portals…';
-      const res = await fetch('/api/voice-assist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          audioBase64,
-          mimeType,
-          transcript,
-          language: $('#ui-lang').value,
-          currentProfile: getCurrentProfile(),
-          history: chatHistory.slice(-6),
-          speak: true,
-          interviewMode,
-          chatModel: $('#chat-model-select').value,
-          ttsModel: $('#tts-model-select').value,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Assistant request failed');
+
+      let data;
+      if (isStaticHosting) {
+        data = await callGeminiStaticDirect({ audioBase64, mimeType, transcript, interviewMode });
+      } else {
+        try {
+          const res = await fetch('/api/voice-assist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              audioBase64,
+              mimeType,
+              transcript,
+              language: $('#ui-lang').value,
+              currentProfile: getCurrentProfile(),
+              history: chatHistory.slice(-6),
+              speak: true,
+              interviewMode,
+              chatModel: $('#chat-model-select').value,
+              ttsModel: $('#tts-model-select').value,
+            }),
+          });
+          if (res.status === 404 || res.status === 405) {
+            isStaticHosting = true;
+            updateStaticBadge();
+            data = await callGeminiStaticDirect({ audioBase64, mimeType, transcript, interviewMode });
+          } else {
+            data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Assistant request failed');
+          }
+        } catch (err) {
+          if (!isStaticHosting && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('404') || err.message.includes('Load failed'))) {
+            isStaticHosting = true;
+            updateStaticBadge();
+            data = await callGeminiStaticDirect({ audioBase64, mimeType, transcript, interviewMode });
+          } else {
+            throw err;
+          }
+        }
+      }
 
       if (data.speechLang && I18N[data.speechLang]) applyLanguage(data.speechLang);
       applyExtractedProfile(data.extractedProfile);
-      renderLiveSites(data.liveSites || []);
+      if (data.liveSites && data.liveSites.length) renderLiveSites(data.liveSites);
 
       appendChatMessage(
         'bot',

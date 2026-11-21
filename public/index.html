@@ -520,14 +520,18 @@
     /* AI Service Model Selector & Live Sync (Local API + GitHub Pages Static Fallback) */
     let isStaticHosting = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
     let staticSitesCache = null;
-function normalizeSitesCache(raw) {
-  if (!raw) return [];
-  if (Array.isArray(raw)) return raw;
-  if (Array.isArray(raw.sites)) return raw.sites;
-  if (typeof raw === 'object') return Object.values(raw);
-  return [];
-}
     let staticNoticeShown = false;
+
+    function normalizeSitesArray(raw) {
+      if (!raw) return [];
+      if (Array.isArray(raw)) return raw;
+      if (typeof raw === 'object') {
+        if (Array.isArray(raw.sites)) return raw.sites;
+        if (Array.isArray(raw.sources)) return raw.sources;
+        return Object.values(raw);
+      }
+      return [];
+    }
 
     function getStoredGeminiKey() {
       return (localStorage.getItem('GEMINI_API_KEY') || localStorage.getItem('gemini_api_key') || '').trim();
@@ -628,8 +632,13 @@ function normalizeSitesCache(raw) {
       const chatModels = models.filter((m) => m.category === 'chat');
       const ttsModels = models.filter((m) => m.category === 'tts');
 
-      $('#chat-model-select').innerHTML = (chatModels.length ? chatModels : [{ id: active.chatModel || 'gemini-3.5-flash-lite', displayName: active.chatModel || 'Gemini 3.5 Flash-Lite' }])
-        .map((m) => `<option value="${esc(m.id)}" ${m.id === active.chatModel ? 'selected' : ''}>Chat: ${esc(m.displayName || m.id)}</option>`)
+      const defaultInitialModel = 'gemini-flash-lite-latest';
+      $('#chat-model-select').innerHTML = (chatModels.length ? chatModels : [
+        { id: 'gemini-flash-lite-latest', displayName: 'Gemini Flash-Lite Latest (Web)' },
+        { id: 'gemini-2.5-flash-lite', displayName: 'Gemini 2.5 Flash-Lite (Web)' },
+        { id: 'gemini-flash-latest', displayName: 'Gemini Flash Latest (Web)' },
+      ])
+        .map((m) => `<option value="${esc(m.id)}" ${m.id === (active.chatModel || defaultInitialModel) ? 'selected' : ''}>Chat: ${esc(m.displayName || m.id)}</option>`)
         .join('');
 
       $('#tts-model-select').innerHTML = (ttsModels.length ? ttsModels : [{ id: active.ttsModel || 'gemini-3.8-flash-lite-tts', displayName: active.ttsModel || 'Gemini 3.8 Flash-Lite TTS' }])
@@ -708,17 +717,23 @@ function normalizeSitesCache(raw) {
           const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
           const data = await res.json();
           if (!res.ok) throw new Error(data.error?.message || 'Sync failed');
-          const geminiModels = (data.models || [])
+          const sortedGeminiModels = (data.models || [])
             .filter((m) => (m.supportedGenerationMethods || []).includes('generateContent') && !m.name.includes('embedding'))
             .map((m) => ({
               id: m.name.replace(/^models\//, ''),
               displayName: m.displayName || m.name.replace(/^models\//, ''),
               category: 'chat'
-            }));
+            }))
+            .sort((a, b) => {
+              const aLite = a.id.includes('flash-lite') ? 0 : a.id.includes('flash') ? 1 : 2;
+              const bLite = b.id.includes('flash-lite') ? 0 : b.id.includes('flash') ? 1 : 2;
+              return aLite - bLite;
+            });
+          const activeLiteModel = sortedGeminiModels[0]?.id || 'gemini-flash-lite-latest';
           renderModelDropdowns({
-            active: { chatModel: geminiModels[0]?.id || 'gemini-2.5-flash-lite', ttsModel: 'browser-speech-synthesis' },
+            active: { chatModel: activeLiteModel, ttsModel: 'browser-speech-synthesis' },
             availableModels: [
-              ...geminiModels,
+              ...sortedGeminiModels,
               { id: 'browser-speech-synthesis', displayName: 'Web SpeechSynthesis', category: 'tts' }
             ]
           });
@@ -877,10 +892,10 @@ function normalizeSitesCache(raw) {
         if (!staticSitesCache) {
           try {
             const sRes = await fetch('data/live_cache.json');
-            if (sRes.ok) staticSitesCache = normalizeSitesCache(await sRes.json());
+            if (sRes.ok) staticSitesCache = normalizeSitesArray(await sRes.json());
           } catch {}
         }
-        list = normalizeSitesCache(staticSitesCache).filter((s) => !q || (s.name || '').toLowerCase().includes(q));
+        list = normalizeSitesArray(staticSitesCache).filter((s) => !q || (s.name || '').toLowerCase().includes(q));
       }
       $('#browse').innerHTML = list.map((s) => {
         const notices = (s.notices || []).slice(0, 3)
@@ -1017,9 +1032,9 @@ function normalizeSitesCache(raw) {
       div.className = `msg ${role}`;
       div.innerHTML = `<div>${esc(text)}</div>`;
 
-      if (role === 'bot' && webSources && webSources.length) {
-        const srcHtml = webSources.slice(0, 3)
-          .map((s) => `<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.name)}</a>`)
+      if (role === 'bot' && webSources && (Array.isArray(webSources) ? webSources.length : 0)) {
+        const srcHtml = (Array.isArray(webSources) ? webSources : []).slice(0, 3)
+          .map((s) => `<a href="${esc(s.url || s.uri || '#')}" target="_blank" rel="noopener noreferrer">${esc(s.name || s.title || 'Source')}</a>`)
           .join(' · ');
         const srcDiv = document.createElement('div');
         srcDiv.className = 'msg-sources';
@@ -1079,7 +1094,7 @@ function normalizeSitesCache(raw) {
     }
 
     function renderLiveSites(sites) {
-      const list = sites || [];
+      const list = normalizeSitesArray(sites);
       const onlineCount = list.filter((s) => s.status === 'ok').length;
       $('#live-summary').textContent = `${onlineCount} of ${list.length} saved websites fetched live`;
       $('#live-sites-grid').innerHTML = list.slice(0, 12).map((s) => {
@@ -1126,9 +1141,9 @@ function normalizeSitesCache(raw) {
         try {
           const staticRes = await fetch('data/live_cache.json');
           if (staticRes.ok) {
-            const staticData = await staticRes.json();
-            staticSitesCache = normalizeSitesCache(staticData);
-            renderLiveSites(staticSitesCache);
+            const staticData = normalizeSitesArray(await staticRes.json());
+            staticSitesCache = staticData;
+            renderLiveSites(staticData);
           }
         } catch {}
       }
@@ -1147,13 +1162,14 @@ function normalizeSitesCache(raw) {
       if (!staticSitesCache) {
         try {
           const sRes = await fetch('data/live_cache.json');
-          if (sRes.ok) staticSitesCache = normalizeSitesCache(await sRes.json());
+          if (sRes.ok) staticSitesCache = normalizeSitesArray(await sRes.json());
         } catch {}
       }
 
       const cur = getCurrentProfile();
       const selectedLang = $('#ui-lang').value || 'en-IN';
-      const sampleSites = normalizeSitesCache(staticSitesCache).slice(0, 5).map((s) => ({
+      const sitesList = normalizeSitesArray(staticSitesCache);
+      const sampleSites = sitesList.slice(0, 5).map((s) => ({
         name: s.name,
         url: s.url,
         notices: (s.notices || []).slice(0, 3).map((n) => n.text),
@@ -1187,10 +1203,14 @@ ${JSON.stringify(sampleSites)}`;
         parts.push({ text: `Farmer message: ${transcript}` });
       }
 
+      const selectedModel = $('#chat-model-select').value || 'gemini-flash-lite-latest';
       const modelsToTry = [
-        $('#chat-model-select').value || 'gemini-2.5-flash-lite',
-        'gemini-2.0-flash',
-        'gemini-1.5-flash',
+        selectedModel,
+        'gemini-flash-lite-latest',
+        'gemini-2.5-flash-lite',
+        'gemini-3.1-flash-lite',
+        'gemini-flash-latest',
+        'gemini-2.5-flash',
       ].filter((v, i, a) => a.indexOf(v) === i && !v.includes('local') && !v.includes('tts'));
 
       let lastError = null;
@@ -1234,11 +1254,11 @@ ${JSON.stringify(sampleSites)}`;
             audioMimeType: null,
             model: `${model} (Direct Web)`,
             webSources: [
-              { uri: 'https://pmkisan.gov.in', title: 'PM-KISAN Portal' },
-              { uri: 'https://pmfby.gov.in', title: 'PMFBY Crop Insurance' },
-              { uri: 'https://agricoop.gov.in', title: 'Ministry of Agriculture' },
+              { url: 'https://pmkisan.gov.in', name: 'PM-KISAN Portal' },
+              { url: 'https://pmfby.gov.in', name: 'PMFBY Crop Insurance' },
+              { url: 'https://agricoop.gov.in', name: 'Ministry of Agriculture' },
             ],
-            liveSites: normalizeSitesCache(staticSitesCache),
+            liveSites: normalizeSitesArray(staticSitesCache),
           };
         } catch (err) {
           lastError = err;

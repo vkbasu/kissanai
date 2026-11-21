@@ -4,8 +4,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import httpx
 
-from ai_service.config import get_fallback_chat_models
-from ai_service.local_tts import synthesize_local_wav
+from ai_service.config import get_active_models, get_fallback_chat_models
+from ai_service.local_tts import synthesize_edge_tts, synthesize_local_wav
 from app.config import get_gemini_api_key
 from app.context_index import retrieve_relevant_context
 
@@ -142,9 +142,18 @@ class VoiceAssistant:
         tts_model: Optional[str] = None,
         voice_name: str = "Kore",
         language: str = "en-IN",
-    ) -> Dict[str, str]:
-        """Generate WAV audio locally using offline sherpa-onnx or OS TTS."""
-        return await asyncio.to_thread(synthesize_local_wav, text, language)
+        voice_gender: str = "female",
+    ) -> Dict[str, Any]:
+        """Generate audio using Edge Neural TTS (with fallback to local WAV) or direct local WAV."""
+        active = get_active_models()
+        chosen_model = tts_model or active.get("ttsModel") or "edge-tts"
+        gender = voice_gender or active.get("voiceGender") or "female"
+        if chosen_model == "local-pyttsx3":
+            return await asyncio.to_thread(synthesize_local_wav, text, language, 165, gender)
+        try:
+            return await synthesize_edge_tts(text=text, lang=language, voice_gender=gender)
+        except Exception:
+            return await asyncio.to_thread(synthesize_local_wav, text, language, 165, gender)
 
     async def process_turn_single_call(
         self,

@@ -11,8 +11,9 @@ DEFAULT_SPEC: Dict[str, Any] = {
     "syncedAt": None,
     "active": {
         "chatModel": "gemini-4-hydrogen",
-        "ttsModel": "local-pyttsx3",
+        "ttsModel": "edge-tts",
         "liveModel": "gemini-3.8-live",
+        "voiceGender": "female",
     },
     "availableModels": [],
 }
@@ -49,6 +50,7 @@ def get_active_models(path: Optional[Path] = None) -> Dict[str, str]:
         "chatModel": str(active.get("chatModel") or DEFAULT_SPEC["active"]["chatModel"]),
         "ttsModel": str(active.get("ttsModel") or DEFAULT_SPEC["active"]["ttsModel"]),
         "liveModel": str(active.get("liveModel") or DEFAULT_SPEC["active"]["liveModel"]),
+        "voiceGender": str(active.get("voiceGender") or DEFAULT_SPEC["active"].get("voiceGender", "female")),
     }
 
 
@@ -56,6 +58,7 @@ def set_active_models(
     chat_model: Optional[str] = None,
     tts_model: Optional[str] = None,
     live_model: Optional[str] = None,
+    voice_gender: Optional[str] = None,
     path: Optional[Path] = None,
 ) -> Dict[str, Any]:
     specs = load_model_specs(path)
@@ -66,6 +69,8 @@ def set_active_models(
         active["ttsModel"] = tts_model.strip()
     if live_model:
         active["liveModel"] = live_model.strip()
+    if voice_gender:
+        active["voiceGender"] = voice_gender.strip()
     save_model_specs(specs, path)
     return specs
 

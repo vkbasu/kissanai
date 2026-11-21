@@ -3,8 +3,9 @@
   "syncedAt": null,
   "active": {
     "chatModel": "gemini-2.5-flash-lite",
-    "ttsModel": "local-pyttsx3",
-    "liveModel": "gemini-3.8-live"
+    "ttsModel": "edge-tts",
+    "liveModel": "gemini-3.8-live",
+    "voiceGender": "female"
   },
   "availableModels": [
     {
@@ -32,6 +33,16 @@
       "freeTier": true,
       "supportedMethods": [
         "generateContent"
+      ]
+    },
+    {
+      "id": "edge-tts",
+      "displayName": "Microsoft Edge Neural TTS (Free Online)",
+      "category": "tts",
+      "freeTier": true,
+      "supportedMethods": [
+        "stream",
+        "audio"
       ]
     },
     {

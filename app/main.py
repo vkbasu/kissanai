@@ -8,6 +8,7 @@ from fastapi import FastAPI, Query, Request
 from fastapi.responses import FileResponse, JSONResponse
 
 from ai_service.config import get_active_models, load_model_specs, set_active_models
+from ai_service.local_tts import synthesize_edge_tts, synthesize_local_wav
 from ai_service.sync_models import sync_free_models
 from app.config import get_gemini_api_key, load_env
 from app.live_fetcher import DynamicSourceStore, LiveFetcher
@@ -110,6 +111,7 @@ def create_app(
             "model": active["chatModel"],
             "ttsModel": active["ttsModel"],
             "liveModel": active["liveModel"],
+            "voiceGender": active.get("voiceGender", "female"),
         }
 
     @app.get("/api/ai/models")
@@ -137,6 +139,7 @@ def create_app(
             chat_model=body.get("chatModel"),
             tts_model=body.get("ttsModel"),
             live_model=body.get("liveModel"),
+            voice_gender=body.get("voiceGender"),
         )
 
     @app.get("/api/sources")
@@ -221,18 +224,22 @@ def create_app(
         if not text:
             return JSONResponse(status_code=400, content={"error": "text is required"})
 
-        api_key = get_gemini_api_key()
-        if not api_key:
-            return JSONResponse(status_code=400, content={"error": "GEMINI_API_KEY is not set in env/.env"})
+        active = get_active_models()
+        voice_gender = str(body.get("voiceGender") or active.get("voiceGender") or "female").strip().lower()
+        if voice_gender not in ("female", "male"):
+            voice_gender = "female"
+        lang = str(body.get("language") or body.get("lang") or "en-IN").strip()
+        tts_model = str(body.get("ttsModel") or active.get("ttsModel") or "edge-tts").strip()
 
         try:
-            return await assistant.synthesize_speech(
-                text=text,
-                api_key=api_key,
-                tts_model=body.get("ttsModel"),
-            )
-        except Exception as exc:
-            return JSONResponse(status_code=502, content={"error": f"Gemini TTS failed: {exc}"})
+            if tts_model == "local-pyttsx3":
+                return await asyncio.to_thread(synthesize_local_wav, text, lang, 165, voice_gender)
+            return await synthesize_edge_tts(text=text, lang=lang, voice_gender=voice_gender)
+        except Exception:
+            try:
+                return await asyncio.to_thread(synthesize_local_wav, text, lang, 165, voice_gender)
+            except Exception as inner_exc:
+                return JSONResponse(status_code=502, content={"error": f"TTS failed: {inner_exc}"})
 
     @app.post("/api/voice-assist")
     async def voice_assist(request: Request):
@@ -248,9 +255,13 @@ def create_app(
         history = body.get("history") if isinstance(body.get("history"), list) else []
         current_profile = body.get("currentProfile") if isinstance(body.get("currentProfile"), dict) else {}
         speak_enabled = body.get("speak", True) is not False
+        active = get_active_models()
+        voice_gender = str(body.get("voiceGender") or active.get("voiceGender") or "female").strip().lower()
+        if voice_gender not in ("female", "male"):
+            voice_gender = "female"
         interview_mode = bool(body.get("interviewMode", False))
         requested_model = body.get("chatModel") or None
-        requested_tts = body.get("ttsModel") or None
+        requested_tts = body.get("ttsModel") or active.get("ttsModel") or "edge-tts"
 
         if not audio_base64 and not transcript:
             return JSONResponse(status_code=400, content={"error": "Provide audioBase64 or transcript"})
@@ -265,7 +276,7 @@ def create_app(
         await fetcher.refresh_all(force=False, crawl_subpages=True)
         cached_sites = fetcher.store.all_cached()
 
-        used_model = requested_model or get_active_models()["chatModel"]
+        used_model = requested_model or active["chatModel"]
         grounded_urls = []
         try:
             farmer, speech_text, grounded_urls, used_model = await assistant.process_turn_single_call(
@@ -297,26 +308,31 @@ def create_app(
             except Exception:
                 newly_fetched = []
 
-        audio_out: Optional[Dict[str, str]] = None
+        audio_out: Optional[Dict[str, Any]] = None
         tts_error: Optional[str] = None
         if speak_enabled and speech_text:
             try:
-                audio_out = await assistant.synthesize_speech(
-                    text=speech_text,
-                    api_key=api_key,
-                    tts_model=requested_tts,
-                    language=speech_lang,
-                )
+                if requested_tts == "local-pyttsx3":
+                    audio_out = await asyncio.to_thread(synthesize_local_wav, speech_text, speech_lang, 165, voice_gender)
+                else:
+                    audio_out = await synthesize_edge_tts(
+                        text=speech_text,
+                        lang=speech_lang,
+                        voice_gender=voice_gender,
+                    )
             except Exception as exc:
-                audio_out = None
-                tts_error = str(exc)
+                try:
+                    audio_out = await asyncio.to_thread(synthesize_local_wav, speech_text, speech_lang, 165, voice_gender)
+                except Exception as inner_exc:
+                    audio_out = None
+                    tts_error = str(inner_exc)
 
-        active = get_active_models()
         return {
             "aiUsed": used_model != "live-portal-fallback",
             "model": used_model,
             "ttsModel": audio_out["ttsModel"] if audio_out else None,
             "liveModel": active["liveModel"],
+            "voiceGender": audio_out.get("voiceGender", voice_gender) if audio_out else voice_gender,
             "extractedProfile": farmer,
             "speechText": speech_text,
             "speechLang": speech_lang,

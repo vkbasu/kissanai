@@ -104,8 +104,21 @@ async def sync_free_models(
     specs = load_model_specs(models_path)
     specs["syncedAt"] = datetime.now(timezone.utc).isoformat()
     if classified:
-        local_tts = {"id": "local-pyttsx3", "displayName": "Local Python TTS (Offline)", "category": "tts", "freeTier": True, "supportedMethods": ["local"]}
-        specs["availableModels"] = [local_tts] + [m for m in classified if m["category"] != "tts"]
+        edge_tts_model = {
+            "id": "edge-tts",
+            "displayName": "Microsoft Edge Neural TTS (Free Online)",
+            "category": "tts",
+            "freeTier": True,
+            "supportedMethods": ["stream", "audio"],
+        }
+        local_tts = {
+            "id": "local-pyttsx3",
+            "displayName": "Local Python TTS (Offline)",
+            "category": "tts",
+            "freeTier": True,
+            "supportedMethods": ["local"],
+        }
+        specs["availableModels"] = [edge_tts_model, local_tts] + [m for m in classified if m["category"] != "tts"]
         chat_ids = [m["id"] for m in classified if m["category"] == "chat"]
         tts_ids = [m["id"] for m in classified if m["category"] == "tts"]
         live_ids = [m["id"] for m in classified if m["category"] == "live"]
@@ -113,7 +126,9 @@ async def sync_free_models(
         if specs["active"].get("chatModel") not in chat_ids and chat_ids:
             specs["active"]["chatModel"] = _pick_preferred(chat_ids, PREFERRED_CHAT_ORDER)
         if not specs["active"].get("ttsModel"):
-            specs["active"]["ttsModel"] = _pick_preferred(tts_ids, ("gemini-3.8-flash-lite-tts", "gemini-3.8-flash-tts"))
+            specs["active"]["ttsModel"] = "edge-tts"
+        if not specs["active"].get("voiceGender"):
+            specs["active"]["voiceGender"] = "female"
         if specs["active"].get("liveModel") not in live_ids and live_ids:
             specs["active"]["liveModel"] = _pick_preferred(live_ids, ("gemini-3.8-live",))
 

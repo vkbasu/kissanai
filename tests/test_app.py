@@ -1,15 +1,18 @@
 import asyncio
+import hashlib
 import json
 import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import httpx
 from fastapi.testclient import TestClient
 
 from ai_service.config import load_model_specs
 from ai_service.download_voices import LANGUAGE_TO_MMS, download_voice
+from ai_service.local_tts import resolve_edge_voice, synthesize_edge_tts
 from ai_service.sync_models import sync_free_models
 from app.config import load_env
 from app.context_index import retrieve_relevant_context
@@ -213,10 +216,68 @@ class TestDynamicFastAPIEndpoints(unittest.TestCase):
             self.assertEqual(res.status_code, 200)
             data = res.json()
             self.assertEqual(data["extractedProfile"]["state"], "Karnataka")
-            self.assertIn(data["audioMimeType"], ("audio/wav", None))
+            self.assertIn(data["audioMimeType"], ("audio/mpeg", "audio/wav", None))
             self.assertEqual(len(data["webSources"]), 1)
         finally:
             os.environ.pop("GEMINI_API_KEY", None)
+
+
+class TestEdgeNeuralTtsAndVoiceGender(unittest.TestCase):
+    def test_edge_neural_voice_gender_selection(self):
+        cases = [
+            ("hi-IN", "female", "hi-IN-SwaraNeural"),
+            ("hi-IN", "male", "hi-IN-MadhurNeural"),
+            ("en-IN", "female", "en-IN-NeerjaNeural"),
+            ("en-IN", "male", "en-IN-PrabhatNeural"),
+            ("mr-IN", "female", "mr-IN-AarohiNeural"),
+            ("mr-IN", "male", "mr-IN-ManoharNeural"),
+            ("ta-IN", "female", "ta-IN-PallaviNeural"),
+            ("ta-IN", "male", "ta-IN-ValluvarNeural"),
+            ("te-IN", "female", "te-IN-ShrutiNeural"),
+            ("te-IN", "male", "te-IN-MohanNeural"),
+            ("kn-IN", "female", "kn-IN-SapnaNeural"),
+            ("kn-IN", "male", "kn-IN-GaganNeural"),
+            ("bn-IN", "female", "bn-IN-TanishaaNeural"),
+            ("bn-IN", "male", "bn-IN-BashkarNeural"),
+            ("gu-IN", "female", "gu-IN-DhwaniNeural"),
+            ("gu-IN", "male", "gu-IN-NiranjanNeural"),
+            ("ml-IN", "female", "ml-IN-SobhanaNeural"),
+            ("ml-IN", "male", "ml-IN-MidhunNeural"),
+        ]
+        for locale, gender, expected_voice in cases:
+            selected = asyncio.run(resolve_edge_voice(locale, gender))
+            self.assertEqual(selected, expected_voice, f"Failed for {locale} ({gender})")
+
+    def test_edge_tts_fallback_to_local_wav(self):
+        with patch("ai_service.local_tts.synthesize_local_wav") as mock_local:
+            mock_local.return_value = {
+                "audioBase64": "UklGRiQAAABXQVZF",
+                "audioMimeType": "audio/wav",
+                "ttsModel": "local-windows-sapi",
+                "voiceGender": "female",
+            }
+            with patch("ai_service.local_tts.resolve_edge_voice", side_effect=RuntimeError("Network offline")):
+                res = asyncio.run(synthesize_edge_tts("नमस्ते किसान भाइयों", "hi-IN", "female"))
+                self.assertEqual(res["audioMimeType"], "audio/wav")
+                self.assertEqual(res["voiceGender"], "female")
+                mock_local.assert_called_once()
+
+    def test_index_html_files_are_identical(self):
+        base_dir = Path(__file__).resolve().parent.parent
+        root_index = base_dir / "index.html"
+        dir_index = base_dir / "index" / "index.html"
+        public_index = base_dir / "public" / "index.html"
+
+        self.assertTrue(root_index.exists(), "Root index.html missing")
+        self.assertTrue(dir_index.exists(), "index/index.html missing")
+        self.assertTrue(public_index.exists(), "public/index.html missing")
+
+        h_root = hashlib.sha256(root_index.read_bytes()).hexdigest()
+        h_dir = hashlib.sha256(dir_index.read_bytes()).hexdigest()
+        h_public = hashlib.sha256(public_index.read_bytes()).hexdigest()
+
+        self.assertEqual(h_root, h_dir, "root index.html does not match index/index.html")
+        self.assertEqual(h_root, h_public, "root index.html does not match public/index.html")
 
 
 if __name__ == "__main__":

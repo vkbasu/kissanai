@@ -154,9 +154,10 @@
 
     .model-bar {
       background: #173024; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.12);
-      display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; align-items: center;
+      display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
     }
     .model-bar select {
+      flex: 1 1 110px;
       padding: 4px 6px; font-size: .76rem; background: #234534; color: #fff;
       border: 1px solid rgba(255,255,255,0.28); border-radius: 4px;
     }
@@ -351,10 +352,14 @@
         </div>
       </div>
 
-      <!-- AI Service Model Selector & Sync Bar -->
+      <!-- AI Service Model Selector, Voice Gender & Sync Bar -->
       <div class="model-bar">
         <select id="chat-model-select" aria-label="Select AI chat model" title="Active AI Chat Model"></select>
         <select id="tts-model-select" aria-label="Select AI audio model" title="Active AI Audio TTS Model"></select>
+        <select id="voice-gender-select" aria-label="Select AI Voice Gender" title="AI Voice Gender">
+          <option value="female">👩 Female Voice</option>
+          <option value="male">👨 Male Voice</option>
+        </select>
         <button type="button" class="sync-models-btn" id="sync-models-btn" title="Fetch all free Google AI Studio models">↻ Free Models</button>
       </div>
 
@@ -625,6 +630,16 @@
         .join('');
     }
 
+    // Persist and restore Voice Gender
+    const initialVoiceGender = localStorage.getItem('SF_VOICE_GENDER') || 'female';
+    if ($('#voice-gender-select')) {
+      $('#voice-gender-select').value = initialVoiceGender;
+      $('#voice-gender-select').addEventListener('change', (e) => {
+        localStorage.setItem('SF_VOICE_GENDER', e.target.value);
+        saveSelectedModels();
+      });
+    }
+
     async function loadAiModels() {
       try {
         const [statusRes, modelsRes] = await Promise.all([
@@ -635,13 +650,16 @@
         const statusData = await statusRes.json();
         const specs = await modelsRes.json();
         renderModelDropdowns(specs);
+        if (specs.active?.voiceGender && !localStorage.getItem('SF_VOICE_GENDER')) {
+          if ($('#voice-gender-select')) $('#voice-gender-select').value = specs.active.voiceGender;
+        }
         $('#voice-ai-badge').textContent = statusData.aiConfigured
           ? `${(specs.availableModels || []).length} free models ready`
           : 'Add GEMINI_API_KEY in env/.env';
       } catch {
         isStaticHosting = true;
         renderModelDropdowns({
-          active: { chatModel: 'gemini-2.5-flash-lite', ttsModel: 'browser-speech-synthesis' },
+          active: { chatModel: 'gemini-2.5-flash-lite', ttsModel: 'browser-speech-synthesis', voiceGender: initialVoiceGender },
           availableModels: [
             { id: 'gemini-2.5-flash-lite', displayName: 'Gemini 2.5 Flash-Lite (Web)', category: 'chat' },
             { id: 'gemini-2.0-flash', displayName: 'Gemini 2.0 Flash (Web)', category: 'chat' },
@@ -657,11 +675,12 @@
       if (isStaticHosting) return;
       const chatModel = $('#chat-model-select').value;
       const ttsModel = $('#tts-model-select').value;
+      const voiceGender = $('#voice-gender-select')?.value || 'female';
       try {
         await fetch('/api/ai/models/select', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chatModel, ttsModel }),
+          body: JSON.stringify({ chatModel, ttsModel, voiceGender }),
         });
       } catch {}
     }
@@ -902,38 +921,85 @@
       $('#stop-audio-btn').hidden = true;
     }
 
-    function playAudioResponse(text, lang = 'en-IN', audioBase64 = null, audioMimeType = 'audio/wav', onFinished = null) {
+    function speakWithBrowserTts(text, lang = 'en-IN', doneCallback = null) {
+      if (!('speechSynthesis' in window) || !text) {
+        if (doneCallback) doneCallback();
+        return;
+      }
+      window.speechSynthesis.resume();
+      const utter = new SpeechSynthesisUtterance(text);
+      const voices = window.speechSynthesis.getVoices();
+      const langPrefix = (lang || 'en-IN').split('-')[0].toLowerCase();
+      const prefGender = $('#voice-gender-select')?.value || localStorage.getItem('SF_VOICE_GENDER') || 'female';
+
+      const femaleKeywords = ['female', 'woman', 'zira', 'swara', 'neerja', 'aarohi', 'tanishaa', 'sapna', 'pallavi', 'shruti', 'dhwani', 'sobhana', 'kore', 'jenny', 'heera', 'kalpana'];
+      const maleKeywords = ['male', 'man', 'david', 'madhur', 'prabhat', 'manohar', 'bashkar', 'gagan', 'valluvar', 'mohan', 'niranjan', 'midhun', 'george', 'guy', 'ravi', 'hemant'];
+
+      const targetKeywords = prefGender === 'male' ? maleKeywords : femaleKeywords;
+      const oppositeKeywords = prefGender === 'male' ? femaleKeywords : maleKeywords;
+
+      // 1. Language match + preferred gender
+      let match = voices.find((v) => {
+        const vl = v.lang.toLowerCase();
+        const vn = v.name.toLowerCase();
+        const matchesLang = vl.startsWith(langPrefix) || vl.replace('_', '-').startsWith(lang.toLowerCase());
+        const hasTarget = targetKeywords.some((k) => vn.includes(k));
+        const hasOpposite = oppositeKeywords.some((k) => vn.includes(k));
+        return matchesLang && hasTarget && !hasOpposite;
+      });
+
+      // 2. Language match with any voice
+      if (!match) {
+        match = voices.find((v) => {
+          const vl = v.lang.toLowerCase();
+          return vl.startsWith(langPrefix) || vl.replace('_', '-').startsWith(lang.toLowerCase());
+        });
+      }
+
+      // 3. Fallback: Preferred gender across any voice
+      if (!match) {
+        match = voices.find((v) => {
+          const vn = v.name.toLowerCase();
+          return targetKeywords.some((k) => vn.includes(k));
+        });
+      }
+
+      if (!match) match = voices[0] || null;
+
+      if (match) {
+        utter.voice = match;
+        utter.lang = match.lang;
+      } else {
+        utter.lang = lang;
+      }
+
+      utter.rate = 0.96;
+      utter.onend = doneCallback || null;
+      utter.onerror = doneCallback || null;
+      window.speechSynthesis.speak(utter);
+    }
+
+    function playAudioResponse(text, lang = 'en-IN', audioBase64 = null, audioMimeType = 'audio/mpeg', onFinished = null) {
       stopAllAudio();
       if (!text && !audioBase64) { if (onFinished) onFinished(); return; }
       $('#stop-audio-btn').hidden = false;
       const done = () => { $('#stop-audio-btn').hidden = true; if (onFinished) onFinished(); };
 
       if (audioBase64) {
-        const audio = new Audio(`data:${audioMimeType};base64,${audioBase64}`);
+        const mime = audioMimeType || (audioBase64.startsWith('//uQ') || audioBase64.startsWith('SUQz') ? 'audio/mpeg' : 'audio/wav');
+        const audio = new Audio(`data:${mime};base64,${audioBase64}`);
         currentAudio = audio;
         audio.onended = done;
         audio.play().catch(() => {
           if ('speechSynthesis' in window && text) {
-            const utter = new SpeechSynthesisUtterance(text);
-            utter.lang = lang;
-            utter.onend = done;
-            window.speechSynthesis.speak(utter);
+            speakWithBrowserTts(text, lang, done);
           } else { done(); }
         });
         return;
       }
 
       if ('speechSynthesis' in window && text) {
-        window.speechSynthesis.resume();
-        const utter = new SpeechSynthesisUtterance(text);
-        const voices = window.speechSynthesis.getVoices();
-        const match = voices.find((v) => v.lang.toLowerCase().startsWith(lang.split('-')[0].toLowerCase()));
-        if (match) utter.voice = match;
-        utter.lang = match ? match.lang : (voices[0]?.lang || 'en-US');
-        utter.rate = 0.96;
-        utter.onend = done;
-        utter.onerror = done;
-        window.speechSynthesis.speak(utter);
+        speakWithBrowserTts(text, lang, done);
       } else { done(); }
     }
     $('#stop-audio-btn').addEventListener('click', stopAllAudio);
@@ -1182,6 +1248,7 @@ ${JSON.stringify(sampleSites)}`;
         data = await callGeminiStaticDirect({ audioBase64, mimeType, transcript, interviewMode });
       } else {
         try {
+          const voiceGender = $('#voice-gender-select')?.value || localStorage.getItem('SF_VOICE_GENDER') || 'female';
           const res = await fetch('/api/voice-assist', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1196,6 +1263,7 @@ ${JSON.stringify(sampleSites)}`;
               interviewMode,
               chatModel: $('#chat-model-select').value,
               ttsModel: $('#tts-model-select').value,
+              voiceGender,
             }),
           });
           if (res.status === 404 || res.status === 405) {
@@ -1226,7 +1294,7 @@ ${JSON.stringify(sampleSites)}`;
         data.speechText,
         {
           audioBase64: data.audioBase64,
-          audioMimeType: data.audioMimeType || 'audio/wav',
+          audioMimeType: data.audioMimeType || 'audio/mpeg',
           lang: data.speechLang || 'en-IN',
         },
         data.webSources || [],
@@ -1238,7 +1306,7 @@ ${JSON.stringify(sampleSites)}`;
         data.speechText,
         data.speechLang || 'en-IN',
         data.audioBase64,
-        data.audioMimeType || 'audio/wav',
+        data.audioMimeType || 'audio/mpeg',
         () => { if (liveHandsFree) startHandsFreeTurn(); }
       );
     }
